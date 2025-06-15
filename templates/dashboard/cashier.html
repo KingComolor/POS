@@ -112,7 +112,7 @@
                                             {{ sale.payment_method.upper() }}
                                         </span>
                                     </td>
-                                    <td>{{ moment(sale.created_at).format('HH:mm') }}</td>
+                                    <td>{{ sale.created_at.strftime('%H:%M') }}</td>
                                     <td>
                                         <span class="badge bg-{{ 'success' if sale.payment_status.value == 'completed' else 'warning' }}">
                                             {{ sale.payment_status.value.title() }}

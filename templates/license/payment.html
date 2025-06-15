@@ -18,7 +18,7 @@
                     <div class="alert alert-success text-center">
                         <i class="fas fa-check-circle fa-3x mb-3"></i>
                         <h5>License Active!</h5>
-                        <p>Your Comolor POS license is currently active and expires on {{ moment(business.license_expires_at).format('MMMM Do, YYYY') }}.</p>
+                        <p>Your Comolor POS license is currently active and expires on {{ business.license_expires_at.strftime('%B %d, %Y') }}.</p>
                         <p><strong>{{ business.days_until_expiry() }}</strong> days remaining</p>
                     </div>
                     

@@ -128,7 +128,7 @@
                                             {{ sale.payment_method.upper() }}
                                         </span>
                                     </td>
-                                    <td>{{ moment(sale.created_at).format('MMM DD, HH:mm') }}</td>
+                                    <td>{{ sale.created_at.strftime('%b %d, %H:%M') }}</td>
                                     <td>
                                         <span class="badge bg-{{ 'success' if sale.payment_status.value == 'completed' else 'warning' }}">
                                             {{ sale.payment_status.value.title() }}
@@ -197,7 +197,7 @@
                         Active License
                     </div>
                     <p class="mb-1"><strong>Plan:</strong> {{ business.subscription_plan.title() }}</p>
-                    <p class="mb-1"><strong>Expires:</strong> {{ moment(business.license_expires_at).format('MMM DD, YYYY') }}</p>
+                    <p class="mb-1"><strong>Expires:</strong> {{ business.license_expires_at.strftime('%b %d, %Y') }}</p>
                     <p class="mb-3"><strong>Days Left:</strong> {{ business.days_until_expiry() }}</p>
                     
                     {% if business.days_until_expiry() <= 5 %}

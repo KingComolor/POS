@@ -106,7 +106,7 @@
                                         {% endif %}
                                     </td>
                                     <td>KES {{ "{:,.0f}".format(payment.amount) }}</td>
-                                    <td>{{ moment(payment.created_at).format('MMM DD') }}</td>
+                                    <td>{{ payment.created_at.strftime('%b %d') }}</td>
                                     <td>
                                         <span class="badge bg-{{ 'success' if payment.status.value == 'completed' else 'warning' }}">
                                             {{ payment.status.value.title() }}
@@ -155,7 +155,7 @@
                                             {{ business.status.value.title() }}
                                         </span>
                                     </td>
-                                    <td>{{ moment(business.created_at).format('MMM DD') }}</td>
+                                    <td>{{ business.created_at.strftime('%b %d') }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
