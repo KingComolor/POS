@@ -2,18 +2,18 @@
 
 ## Table of Contents
 1. [Deployment Overview](#deployment-overview)
-2. [Render.com Deployment](#rendercom-deployment)
-3. [Environment Configuration](#environment-configuration)
-4. [Database Setup](#database-setup)
-5. [M-Pesa Configuration](#m-pesa-configuration)
-6. [Email Service Setup](#email-service-setup)
-7. [Domain and SSL](#domain-and-ssl)
+2. [Replit Deployment](#replit-deployment)
+3. [Alternative Cloud Deployment](#alternative-cloud-deployment)
+4. [Environment Configuration](#environment-configuration)
+5. [Database Setup](#database-setup)
+6. [M-Pesa Configuration](#m-pesa-configuration)
+7. [Email Service Setup](#email-service-setup)
 8. [Monitoring and Maintenance](#monitoring-and-maintenance)
 9. [Troubleshooting](#troubleshooting)
 
 ## Deployment Overview
 
-Comolor POS is designed for cloud deployment with PostgreSQL database support. This guide covers deployment to Render.com, but the application can be adapted for other platforms like Heroku, DigitalOcean, or AWS.
+Comolor POS is designed for cloud deployment with PostgreSQL database support. The application is currently running on Replit with full functionality, including multi-tenant architecture and M-Pesa integration.
 
 ### Deployment Requirements
 - PostgreSQL database (12+)
@@ -22,21 +22,59 @@ Comolor POS is designed for cloud deployment with PostgreSQL database support. T
 - HTTPS support
 - Environment variable management
 
-## Render.com Deployment
+## Replit Deployment
+
+### Current Status
+✅ **Successfully Deployed**: The application is currently running on Replit with full functionality.
+
+### Key Components Set Up
+- **Database**: PostgreSQL database configured and operational
+- **Session Management**: Secure session secret configured via environment variables
+- **Multi-tenant Architecture**: Full data isolation between businesses implemented
+- **Background Tasks**: APScheduler configured for license monitoring
+- **Payment Integration**: M-Pesa API integration ready (requires API credentials)
+- **Email Service**: Email notifications configured (requires SMTP credentials)
+
+### Required Environment Variables
+```bash
+# Essential (Already Configured)
+DATABASE_URL=postgresql://...
+SESSION_SECRET=your_secure_secret_key
+
+# Optional (For Full Functionality)
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your_email@gmail.com
+MAIL_PASSWORD=your_app_password
+MAIL_DEFAULT_SENDER=noreply@yourcompany.com
+
+# M-Pesa Integration (For Payment Processing)
+MPESA_CONSUMER_KEY=your_consumer_key
+MPESA_CONSUMER_SECRET=your_consumer_secret
+MPESA_PASSKEY=your_passkey
+MPESA_SHORTCODE=your_shortcode
+DEVELOPER_TILL_NUMBER=your_till_number
+```
+
+### Accessing Your Application
+- Your POS system is accessible at your Replit URL
+- Admin can register new businesses and manage the system
+- Each business operates independently with secure data isolation
+
+## Alternative Cloud Deployment
+
+For deployment to other platforms like Render.com, Heroku, or DigitalOcean:
 
 ### Step 1: Repository Setup
 1. Push your code to GitHub/GitLab
 2. Ensure all files are committed including:
-   - `requirements.txt` or `pyproject.toml`
+   - `pyproject.toml` (Python dependencies)
    - `main.py` (application entry point)
    - All Python modules and templates
 
-### Step 2: Create Render Service
-1. Log in to [Render.com](https://render.com)
-2. Click "New +" → "Web Service"
-3. Connect your GitHub/GitLab repository
-4. Configure service settings:
+### Step 2: Platform-Specific Configuration
 
+#### Render.com
 ```yaml
 Name: comolor-pos
 Environment: Python 3
@@ -46,8 +84,14 @@ Build Command: pip install -r requirements.txt
 Start Command: gunicorn --bind 0.0.0.0:$PORT --workers 2 main:app
 ```
 
+#### Heroku
+```bash
+# Procfile
+web: gunicorn --bind 0.0.0.0:$PORT main:app
+```
+
 ### Step 3: Database Setup
-1. In Render dashboard, click "New +" → "PostgreSQL"
+1. Create PostgreSQL database on your chosen platform
 2. Configure database:
    - Name: `comolor-pos-db`
    - Database: `comolor_pos`
