@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Broadcast Message{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Send Broadcast Message</h2>
+        <a href="{{ url_for('system_notifications') }}" class="btn btn-secondary">← Back to Notifications</a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Compose Broadcast Message</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="form-group">
+                            <label for="title">Message Title</label>
+                            <input type="text" class="form-control" id="title" name="title" required placeholder="Enter message title">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="message">Message Content</label>
+                            <textarea class="form-control" id="message" name="message" rows="6" required placeholder="Enter your message content here..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="target_audience">Target Audience</label>
+                            <select class="form-control" id="target_audience" name="target_audience" required>
+                                <option value="all">All Businesses</option>
+                                <option value="active">Active Businesses Only</option>
+                                <option value="pending">Pending Businesses Only</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary btn-lg">Send Broadcast Message</button>
+                            <a href="{{ url_for('system_notifications') }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Broadcast Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>How it works:</strong></p>
+                    <ul>
+                        <li>Messages are logged in each business's activity log</li>
+                        <li>Business owners and admins will see the message in their dashboard</li>
+                        <li>Use this for system announcements, maintenance notices, or important updates</li>
+                    </ul>
+
+                    <p><strong>Best Practices:</strong></p>
+                    <ul>
+                        <li>Keep messages clear and concise</li>
+                        <li>Include action items if needed</li>
+                        <li>Use appropriate targeting to avoid spam</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

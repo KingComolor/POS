@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}System Notifications{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>System Notifications</h2>
+        <a href="{{ url_for('broadcast_message') }}" class="btn btn-primary">Send Broadcast Message</a>
+    </div>
+
+    {% if notifications %}
+    <div class="row">
+        {% for notification in notifications %}
+        <div class="col-md-12 mb-3">
+            <div class="alert alert-{{ 'warning' if notification.type == 'warning' else 'danger' if notification.type == 'error' else 'info' }} alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+                <h5>
+                    {% if notification.type == 'warning' %}⚠️{% elif notification.type == 'error' %}❌{% else %}ℹ️{% endif %}
+                    {{ notification.title }}
+                </h5>
+                <p>{{ notification.message }}</p>
+                <small class="text-muted">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                {% if notification.business_id %}
+                <div class="mt-2">
+                    <a href="{{ url_for('business_details', business_id=notification.business_id) }}" class="btn btn-sm btn-outline-primary">
+                        View Business Details
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-success">
+        <h5>✅ All Clear!</h5>
+        <p>No system notifications at this time. All businesses are operating normally.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

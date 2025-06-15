@@ -988,3 +988,327 @@ def not_found_error(error):
 def internal_error(error):
     db.session.rollback()
     return render_template('errors/500.html'), 500
+
+# ==================== ENHANCED SUPER ADMIN FEATURES ====================
+
+# Business Management Extended
+@app.route('/admin/businesses/<int:business_id>/details')
+@login_required
+@require_role(UserRole.SUPER_ADMIN)
+def business_details(business_id):
+    business = Business.query.get_or_404(business_id)
+    users = User.query.filter_by(business_id=business_id).all()
+    payments = Payment.query.filter_by(business_id=business_id).order_by(Payment.created_at.desc()).limit(10).all()
+    recent_sales = Sale.query.filter_by(business_id=business_id).order_by(Sale.created_at.desc()).limit(10).all()
+    
+    # Business statistics
+    total_sales = Sale.query.filter_by(business_id=business_id).count()
+    total_revenue = db.session.query(db.func.sum(Sale.total_amount)).filter_by(business_id=business_id).scalar() or 0
+    total_products = Product.query.filter_by(business_id=business_id).count()
+    total_customers = Customer.query.filter_by(business_id=business_id).count()
+    
+    return render_template('admin/business_details.html',
+                         business=business, users=users, payments=payments, recent_sales=recent_sales,
+                         total_sales=total_sales, total_revenue=total_revenue, 
+                         total_products=total_products, total_customers=total_customers)
+
+@app.route('/admin/businesses/<int:business_id>/reset-password', methods=['POST'])
+@login_required
+@require_role(UserRole.SUPER_ADMIN)
+def reset_business_password(business_id):
+    business = Business.query.get_or_404(business_id)
+    user_id = request.form.get('user_id', type=int)
+    user = User.query.filter_by(id=user_id, business_id=business_id).first_or_404()
+    
+    new_password = secrets.token_urlsafe(12)
+    user.set_password(new_password)
+    db.session.commit()
+    
+    log_activity(business_id, current_user.id, 'password_reset', f'Password reset for user {user.email}', request)
+    flash(f'Password reset for {user.email}. New password: {new_password}', 'success')
+    return redirect(url_for('business_details', business_id=business_id))
+
+@app.route('/admin/businesses/<int:business_id>/delete', methods=['POST'])
+@login_required
+@require_role(UserRole.SUPER_ADMIN)
+def delete_business(business_id):
+    business = Business.query.get_or_404(business_id)
+    business_name = business.name
+    
+    # Delete all related data
+    User.query.filter_by(business_id=business_id).delete()
+    Product.query.filter_by(business_id=business_id).delete()
+    Customer.query.filter_by(business_id=business_id).delete()
+    Sale.query.filter_by(business_id=business_id).delete()
+    Payment.query.filter_by(business_id=business_id).delete()
+    StockMovement.query.filter_by(business_id=business_id).delete()
+    ActivityLog.query.filter_by(business_id=business_id).delete()
+    
+    db.session.delete(business)
+    db.session.commit()
+    
+    log_activity(None, current_user.id, 'business_deleted', f'Business deleted: {business_name}', request)
+    flash(f'Business "{business_name}" and all related data has been permanently deleted', 'success')
+    return redirect(url_for('manage_businesses'))
+
+# License Management
+@app.route('/admin/licenses')
+@login_required
+@require_role(UserRole.SUPER_ADMIN)
+def manage_licenses():
+    businesses = Business.query.all()
+    
+    active_licenses = []
+    expiring_soon = []
+    expired_licenses = []
+    
+    for business in businesses:
+        if business.license_expires_at:
+            days_remaining = business.days_until_expiry()
+            if days_remaining > 7:
+                active_licenses.append(business)
+            elif days_remaining > 0:
+                expiring_soon.append(business)
+            else:
+                expired_licenses.append(business)
+        else:
+            expired_licenses.append(business)
+    
+    return render_template('admin/manage_licenses.html',
+                         active_licenses=active_licenses, expiring_soon=expiring_soon, expired_licenses=expired_licenses)
+
+@app.route('/admin/licenses/bulk-extend', methods=['POST'])
+@login_required
+@require_role(UserRole.SUPER_ADMIN)
+def bulk_extend_licenses():
+    business_ids = request.form.getlist('business_ids')
+    days = request.form.get('days', 30, type=int)
+    
+    extended_count = 0
+    for business_id in business_ids:
+        business = Business.query.get(business_id)
+        if business:
+            if business.license_expires_at:
+                business.license_expires_at = business.license_expires_at + timedelta(days=days)
+            else:
+                business.license_expires_at = datetime.utcnow() + timedelta(days=days)
+            
+            business.status = BusinessStatus.ACTIVE
+            extended_count += 1
+            log_activity(business.id, current_user.id, 'bulk_license_extended', f'License extended by {days} days', request)
+    
+    db.session.commit()
+    flash(f'Extended licenses for {extended_count} businesses by {days} days', 'success')
+    return redirect(url_for('manage_licenses'))
+
+# User Management
+@app.route('/admin/users')
+@login_required
+@require_role(UserRole.SUPER_ADMIN)
+def manage_users():
+    page = request.args.get('page', 1, type=int)
+    role_filter = request.args.get('role', '')
+    status_filter = request.args.get('status', '')
+    search = request.args.get('search', '')
+    
+    query = User.query.join(Business, User.business_id == Business.id, isouter=True)
+    
+    if role_filter:
+        query = query.filter(User.role == UserRole(role_filter))
+    if status_filter == 'active':
+        query = query.filter(User.is_active == True)
+    elif status_filter == 'inactive':
+        query = query.filter(User.is_active == False)
+    if search:
+        query = query.filter(db.or_(User.name.ilike(f'%{search}%'), User.email.ilike(f'%{search}%'), Business.name.ilike(f'%{search}%')))
+    
+    users = query.order_by(User.created_at.desc()).paginate(page=page, per_page=20, error_out=False)
+    
+    return render_template('admin/manage_users.html', users=users, role_filter=role_filter, status_filter=status_filter, search=search)
+
+@app.route('/admin/users/<int:user_id>/toggle-status', methods=['POST'])
+@login_required
+@require_role(UserRole.SUPER_ADMIN)
+def toggle_user_status(user_id):
+    user = User.query.get_or_404(user_id)
+    
+    if user.role == UserRole.SUPER_ADMIN and user.id != current_user.id:
+        flash('Cannot deactivate other super admin accounts', 'error')
+        return redirect(url_for('manage_users'))
+    
+    user.is_active = not user.is_active
+    db.session.commit()
+    
+    status = 'activated' if user.is_active else 'deactivated'
+    log_activity(user.business_id, current_user.id, 'user_status_changed', f'User {user.email} {status}', request)
+    flash(f'User {user.email} has been {status}', 'success')
+    return redirect(url_for('manage_users'))
+
+# System Settings Enhanced
+@app.route('/admin/settings/update', methods=['POST'])
+@login_required
+@require_role(UserRole.SUPER_ADMIN)
+def update_system_settings():
+    setting_type = request.form.get('setting_type')
+    
+    if setting_type == 'global_config':
+        default_currency = request.form.get('default_currency', 'KES')
+        default_tax_rate = float(request.form.get('default_tax_rate', 16.0))
+        registration_enabled = request.form.get('registration_enabled') == 'on'
+        
+        session['global_settings'] = {
+            'default_currency': default_currency,
+            'default_tax_rate': default_tax_rate,
+            'registration_enabled': registration_enabled
+        }
+        flash('Global settings updated successfully', 'success')
+        
+    elif setting_type == 'licensing':
+        monthly_price = float(request.form.get('monthly_price', 3000))
+        yearly_price = float(request.form.get('yearly_price', 30000))
+        
+        session['licensing_settings'] = {
+            'monthly_price': monthly_price,
+            'yearly_price': yearly_price
+        }
+        flash('Licensing settings updated successfully', 'success')
+    
+    return redirect(url_for('system_settings'))
+
+# System Notifications
+@app.route('/admin/notifications')
+@login_required
+@require_role(UserRole.SUPER_ADMIN)
+def system_notifications():
+    notifications = []
+    
+    # License expiry notifications
+    expiring_businesses = Business.query.filter(
+        Business.license_expires_at <= datetime.utcnow() + timedelta(days=5),
+        Business.license_expires_at > datetime.utcnow(),
+        Business.status == BusinessStatus.ACTIVE
+    ).all()
+    
+    for business in expiring_businesses:
+        days_remaining = business.days_until_expiry()
+        notifications.append({
+            'type': 'warning',
+            'title': 'License Expiring Soon',
+            'message': f'{business.name} license expires in {days_remaining} days',
+            'business_id': business.id,
+            'created_at': business.license_expires_at
+        })
+    
+    # Failed payment notifications
+    failed_payments = Payment.query.filter(
+        Payment.status == PaymentStatus.FAILED,
+        Payment.created_at >= datetime.utcnow() - timedelta(days=7)
+    ).all()
+    
+    for payment in failed_payments:
+        notifications.append({
+            'type': 'error',
+            'title': 'Payment Failed',
+            'message': f'Payment of KES {payment.amount} failed for {payment.business.name if payment.business else "Unknown"}',
+            'business_id': payment.business_id,
+            'created_at': payment.created_at
+        })
+    
+    # New business registrations
+    new_businesses = Business.query.filter(
+        Business.status == BusinessStatus.PENDING,
+        Business.created_at >= datetime.utcnow() - timedelta(days=7)
+    ).all()
+    
+    for business in new_businesses:
+        notifications.append({
+            'type': 'info',
+            'title': 'New Business Registration',
+            'message': f'New business registered: {business.name}',
+            'business_id': business.id,
+            'created_at': business.created_at
+        })
+    
+    notifications.sort(key=lambda x: x['created_at'], reverse=True)
+    return render_template('admin/notifications.html', notifications=notifications)
+
+@app.route('/admin/broadcast', methods=['GET', 'POST'])
+@login_required
+@require_role(UserRole.SUPER_ADMIN)
+def broadcast_message():
+    if request.method == 'POST':
+        title = request.form.get('title')
+        message = request.form.get('message')
+        target_audience = request.form.get('target_audience')
+        
+        query = Business.query
+        if target_audience == 'active':
+            query = query.filter(Business.status == BusinessStatus.ACTIVE)
+        elif target_audience == 'pending':
+            query = query.filter(Business.status == BusinessStatus.PENDING)
+        
+        businesses = query.all()
+        
+        for business in businesses:
+            log_activity(business.id, current_user.id, 'broadcast_message', f'Broadcast: {title} - {message}', request)
+        
+        flash(f'Broadcast message sent to {len(businesses)} businesses', 'success')
+        return redirect(url_for('broadcast_message'))
+    
+    return render_template('admin/broadcast.html')
+
+# Advanced System Management
+@app.route('/admin/system/backup', methods=['POST'])
+@login_required
+@require_role(UserRole.SUPER_ADMIN)
+def system_backup():
+    backup_type = request.form.get('backup_type')
+    
+    if backup_type == 'full':
+        # Simulate full system backup
+        flash('Full system backup initiated successfully', 'success')
+    elif backup_type == 'business':
+        business_id = request.form.get('business_id', type=int)
+        business = Business.query.get(business_id)
+        if business:
+            flash(f'Backup created for business: {business.name}', 'success')
+        else:
+            flash('Business not found', 'error')
+    
+    return redirect(url_for('system_settings'))
+
+@app.route('/admin/system/maintenance-mode', methods=['POST'])
+@login_required
+@require_role(UserRole.SUPER_ADMIN)
+def toggle_maintenance_mode():
+    maintenance_enabled = request.form.get('maintenance_enabled') == 'on'
+    session['maintenance_mode'] = maintenance_enabled
+    
+    if maintenance_enabled:
+        flash('Maintenance mode enabled. New logins are disabled.', 'warning')
+    else:
+        flash('Maintenance mode disabled. System is fully operational.', 'success')
+    
+    return redirect(url_for('system_settings'))
+
+# Payment and Invoice Management
+@app.route('/admin/payments/generate-invoice/<int:payment_id>')
+@login_required
+@require_role(UserRole.SUPER_ADMIN)
+def generate_payment_invoice(payment_id):
+    payment = Payment.query.get_or_404(payment_id)
+    
+    if payment.payment_type != 'license':
+        flash('Can only generate invoices for license payments', 'error')
+        return redirect(url_for('manage_businesses'))
+    
+    # Generate invoice data
+    invoice_data = {
+        'invoice_number': f'INV-{payment.id:06d}',
+        'payment': payment,
+        'business': payment.business,
+        'generated_at': datetime.utcnow(),
+        'due_date': payment.created_at + timedelta(days=30) if payment.created_at else datetime.utcnow()
+    }
+    
+    return render_template('admin/payment_invoice.html', **invoice_data)

@@ -1,0 +1,193 @@
+. Business Management (Tenants)
+View list of all registered businesses
+
+Approve or reject new business registrations
+
+View license status of each business
+
+Activate, suspend, or delete any business
+
+Reset business passwords
+
+Assign default M-Pesa paybill/till for licensing
+
+View business usage logs
+
+🧾 3. Licensing & Payments
+Set licensing plan (e.g., Ksh 3,000/month or 25,000/year)
+
+Add/edit license duration
+
+See who paid, how much, and when (payment history)
+
+View license expiry and renewal status
+
+Auto-lock businesses when license expires
+
+Generate reports for active/inactive businesses
+
+Receive payments via Super Admin’s Till Number
+
+M-Pesa IPN to verify and update license automatically
+
+Send reminders before expiry (via email/SMS)
+
+⚙️ 4. Global System Settings
+Set global configurations:
+
+Allowed currencies (KES)
+
+Date format
+
+Default tax rate (e.g., 16%)
+
+Default user roles and permissions
+
+Set branding defaults (logo, footer message)
+
+Configure integrations (e.g., M-Pesa Daraja keys)
+
+Toggle system features (enable/disable modules)
+
+Toggle registration on/off
+
+Set allowed frontend domains (CORS)
+
+🧑‍💼 5. Super Admin User Management
+Add new super admins
+
+Set access permissions (if multiple super admins)
+
+Reset super admin passwords
+
+View activity logs of all super admins
+
+Lock/unlock any system user
+
+📊 6. Platform Reports & Logs
+Total number of registered businesses
+
+Active vs inactive tenants
+
+M-Pesa license payments per period
+
+Sales volume per business (read-only)
+
+API logs for errors or payment issues
+
+Server performance stats (optional)
+
+🔔 7. Notifications & Alerts
+Get alerts for new business registration
+
+Payment failed or expired license alerts
+
+Security alerts (multiple failed logins)
+
+System update reminders
+
+🧾 8. Terms, Privacy & Legal Pages
+Upload or edit:
+
+Terms & Conditions
+
+Privacy Policy
+
+Licensing Agreement
+
+Businesses must accept Terms to register
+
+Log who accepted and when
+
+🌐 9. Content Management (Optional)
+Upload news or update messages to dashboard
+
+Push notices to all tenants or specific ones
+
+FAQ and help articles
+
+🛠️ 10. Database & Backup Controls
+Manual or auto-database backups
+
+View size of each business’s data
+
+Download backups per business
+
+Restore a business from backup
+
+Clone business for testing
+
+🧪 11. Developer Tools (Advanced)
+API key management
+
+View webhook events from M-Pesa
+
+Manually trigger license status check
+
+View JSON logs of recent payments
+
+Run backend test scripts
+
+Trigger cron jobs (e.g., license expiry checker)
+
+🖨️ 12. Receipt & Template Configuration
+Set default receipt template
+
+Configure what appears on receipts:
+
+Logo
+
+Shop info
+
+M-Pesa confirmation
+
+Footer message
+
+Push template updates to all businesses
+
+🔒 13. Security Settings
+Enforce password policies (min length, symbols)
+
+Manage API access (restrict by IP)
+
+Enable/disable login methods (e.g., Google login)
+
+Audit logs: view who did what and when
+
+🧹 14. Maintenance Controls
+Enter maintenance mode (pause logins temporarily)
+
+Schedule downtimes
+
+Clear cache or temp data
+
+Send broadcast message: "System will be updated at midnight"
+
+🧾 15. Licensing Receipt & Invoice System
+Automatically generate receipts when a business pays
+
+Download or email receipts
+
+Include:
+
+Business name
+
+Amount paid
+
+Date/time
+
+Payment method (M-Pesa Till)
+
+Transaction ID
+
+✅ Bonus: Super Admin Dashboard Includes:
+Quick stats: businesses active, licenses expiring, sales volume
+
+M-Pesa payment logs (license)
+
+Logs of each tenant's last access
+
+List of suspended or locked businesses
+
+Button to add test/demo businesses
+

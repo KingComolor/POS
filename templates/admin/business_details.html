@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Business Details - {{ business.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Business Details: {{ business.name }}</h2>
+        <a href="{{ url_for('manage_businesses') }}" class="btn btn-secondary">← Back to Businesses</a>
+    </div>
+
+    <!-- Business Info Card -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Business Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Name:</strong> {{ business.name }}</p>
+                            <p><strong>Type:</strong> {{ business.business_type }}</p>
+                            <p><strong>Email:</strong> {{ business.email }}</p>
+                            <p><strong>Phone:</strong> {{ business.phone or 'N/A' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Status:</strong> 
+                                <span class="badge badge-{{ 'success' if business.status.value == 'active' else 'warning' if business.status.value == 'pending' else 'danger' }}">
+                                    {{ business.status.value.title() }}
+                                </span>
+                            </p>
+                            <p><strong>License Expires:</strong> 
+                                {% if business.license_expires_at %}
+                                    {{ business.license_expires_at.strftime('%Y-%m-%d') }}
+                                    ({{ business.days_until_expiry() }} days remaining)
+                                {% else %}
+                                    No active license
+                                {% endif %}
+                            </p>
+                            <p><strong>Created:</strong> {{ business.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                            <p><strong>Till Number:</strong> {{ business.till_number or 'N/A' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Quick Stats</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Total Sales:</strong> {{ total_sales }}</p>
+                    <p><strong>Total Revenue:</strong> KES {{ "{:,.2f}".format(total_revenue) }}</p>
+                    <p><strong>Products:</strong> {{ total_products }}</p>
+                    <p><strong>Customers:</strong> {{ total_customers }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Users</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.name }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.role.value.replace('_', ' ').title() }}</td>
+                            <td>
+                                <span class="badge badge-{{ 'success' if user.is_active else 'danger' }}">
+                                    {{ 'Active' if user.is_active else 'Inactive' }}
+                                </span>
+                            </td>
+                            <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('reset_business_password', business_id=business.id) }}" style="display: inline;">
+                                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                                    <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Reset password for {{ user.email }}?')">
+                                        Reset Password
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Payments -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Recent Payments</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Phone</th>
+                            <th>Transaction ID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td>{{ payment.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>{{ payment.payment_type.title() }}</td>
+                            <td>KES {{ "{:,.2f}".format(payment.amount) }}</td>
+                            <td>
+                                <span class="badge badge-{{ 'success' if payment.status.value == 'completed' else 'warning' if payment.status.value == 'pending' else 'danger' }}">
+                                    {{ payment.status.value.title() }}
+                                </span>
+                            </td>
+                            <td>{{ payment.phone_number }}</td>
+                            <td>{{ payment.mpesa_transaction_id or 'N/A' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="card border-danger">
+        <div class="card-header text-danger">
+            <h5>Danger Zone</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-danger">Permanently delete this business and all associated data. This action cannot be undone.</p>
+            <form method="POST" action="{{ url_for('delete_business', business_id=business.id) }}" onsubmit="return confirm('Are you sure you want to permanently delete {{ business.name }} and ALL associated data? This cannot be undone. Type DELETE to confirm.')">
+                <button type="submit" class="btn btn-danger">Delete Business Permanently</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
