@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error - Comolor POS{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="error-page">
+                <h1 class="display-1 text-danger">500</h1>
+                <h2 class="mb-4">Internal Server Error</h2>
+                <p class="lead mb-4">Something went wrong on our end. Please try again later.</p>
+                <div class="d-grid gap-2 d-md-block">
+                    <a href="{{ url_for('index') }}" class="btn btn-primary">Go Home</a>
+                    <a href="javascript:history.back()" class="btn btn-outline-secondary">Go Back</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
