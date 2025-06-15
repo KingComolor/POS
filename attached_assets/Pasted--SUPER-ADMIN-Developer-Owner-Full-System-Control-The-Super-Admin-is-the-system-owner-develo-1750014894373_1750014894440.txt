@@ -1,0 +1,157 @@
+🧑‍💼 SUPER ADMIN (Developer/Owner) – Full System Control
+The Super Admin is the system owner/developer, managing all businesses (tenants), licenses, payments, and core settings.
+
+✅ Features & Functions:
+🔐 Authentication & Access
+Secure Super Admin login
+
+Change password
+
+Two-factor authentication (optional)
+
+🏢 Business/Client Management
+Create new business accounts (tenants)
+
+View, edit, or delete businesses
+
+Assign or manage Admins for each business
+
+💳 License & Billing
+Set pricing (monthly/yearly)
+
+View all license payments
+
+Track license expiry for each business
+
+Activate/deactivate business accounts
+
+Automatic expiry logic (scheduler)
+
+Manual override of license status
+
+View M-Pesa till payment logs
+
+Generate invoices & reports
+
+📦 System Management
+View total businesses, admins, cashiers
+
+Access usage logs & system analytics
+
+Set and update global Terms and Conditions
+
+View error logs & missing file reports
+
+System backups (if needed)
+
+💬 Notifications & Reminders
+View and send license expiry reminders
+
+Create announcements to businesses
+
+Enable/disable payment gateways (M-Pesa, card, etc.)
+
+👨‍💼 ADMIN (Shop Manager/Owner) – Per Business Control
+Each business has one or more Admins who manage operations, users, and configuration for their shop.
+
+✅ Features & Functions:
+🔐 Access
+Secure Admin login
+
+Reset password
+
+⚙️ Business Setup
+Set up shop details (name, logo, address)
+
+Set or change the business’s M-Pesa Till Number
+
+Set business-specific taxes (e.g., VAT)
+
+Set custom receipt message or footer
+
+View and edit business license status
+
+👥 User & Role Management
+Create, view, or deactivate Cashier accounts
+
+Assign roles to users
+
+Reset Cashier passwords
+
+View cashier activity logs
+
+📦 Inventory Management
+Add/edit/delete product categories
+
+Add new products (name, price, barcode, stock qty)
+
+Add supplier details
+
+Track inventory levels (low stock alerts)
+
+💰 Sales Management
+View all sales history
+
+View sales reports by day, product, cashier
+
+Filter sales by M-Pesa or cash
+
+Refund handling (optional)
+
+View real-time sales dashboard
+
+🧾 Payments & Receipts
+View M-Pesa transactions made to the shop’s till number (via IPN)
+
+Verify and match payments with sales
+
+Auto-print or reprint receipts
+
+Export sales to PDF/Excel
+
+🔔 Alerts & Notifications
+Low stock alerts
+
+Payment confirmations
+
+License expiry notice
+
+👩‍💼 CASHIER – Day-to-Day Transactions
+The Cashier handles actual sales and interacts with customers.
+
+✅ Features & Functions:
+🔐 Authentication
+Secure login
+
+Change own password
+
+🛒 Sales
+Add products to cart by scanning barcode or searching
+
+View cart and apply discounts
+
+Select payment method: M-Pesa, Cash, Credit
+
+Print receipt or email it to customer
+
+Cancel or hold transaction
+
+View own sales for the day
+
+💵 M-Pesa Payment Handling
+Show customer M-Pesa Till and amount
+
+Detect payment via IPN (Instant Payment Notification)
+
+Auto-confirm when payment is received
+
+Print receipt automatically after payment match
+
+Manual code entry if offline
+
+🧾 Receipts
+Print/reprint receipts
+
+View today’s sales transactions
+
+Refund with manager approval
