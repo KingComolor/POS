@@ -9,7 +9,7 @@ from models import Payment, Business, Sale, PaymentStatus, BusinessStatus
 
 class MpesaService:
     def __init__(self):
-        self.base_url = "https://sandbox.safaricom.co.ke" if current_app.debug else "https://api.safaricom.co.ke"
+        self.base_url = None
         self.consumer_key = None
         self.consumer_secret = None
         self.passkey = None
@@ -18,6 +18,7 @@ class MpesaService:
         
     def initialize_config(self):
         """Initialize M-Pesa configuration from app config"""
+        self.base_url = "https://sandbox.safaricom.co.ke" if current_app.debug else "https://api.safaricom.co.ke"
         self.consumer_key = current_app.config.get('MPESA_CONSUMER_KEY')
         self.consumer_secret = current_app.config.get('MPESA_CONSUMER_SECRET')
         self.passkey = current_app.config.get('MPESA_PASSKEY')
@@ -64,6 +65,9 @@ class MpesaService:
     
     def initiate_stk_push(self, phone_number, amount, reference_id):
         """Initiate STK push payment"""
+        if not self.base_url:
+            self.initialize_config()
+            
         access_token = self.get_access_token()
         if not access_token:
             return {'success': False, 'message': 'Failed to get access token'}
@@ -227,6 +231,9 @@ class MpesaService:
     
     def verify_transaction(self, transaction_id):
         """Verify a specific transaction with M-Pesa API"""
+        if not self.base_url:
+            self.initialize_config()
+            
         access_token = self.get_access_token()
         if not access_token:
             return {'success': False, 'message': 'Failed to get access token'}
