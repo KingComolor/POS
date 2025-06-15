@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Export Data - Super Admin{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-download me-2"></i>Export Data</h2>
+                <a href="{{ url_for('super_admin_dashboard') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            </div>
+
+            <div class="row">
+                <!-- Businesses Export -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-building fa-3x text-primary"></i>
+                            </div>
+                            <h5 class="card-title">Businesses Data</h5>
+                            <p class="card-text">Export all business information including contact details, status, and license information.</p>
+                            <ul class="list-unstyled text-start small text-muted">
+                                <li><i class="fas fa-check text-success me-1"></i>Business names and types</li>
+                                <li><i class="fas fa-check text-success me-1"></i>Contact information</li>
+                                <li><i class="fas fa-check text-success me-1"></i>License status and expiry</li>
+                                <li><i class="fas fa-check text-success me-1"></i>Creation dates</li>
+                            </ul>
+                        </div>
+                        <div class="card-footer">
+                            <a href="{{ url_for('export_businesses') }}" class="btn btn-primary w-100">
+                                <i class="fas fa-download me-1"></i>Export Businesses CSV
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payments Export -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-credit-card fa-3x text-success"></i>
+                            </div>
+                            <h5 class="card-title">Payments Data</h5>
+                            <p class="card-text">Export all payment transactions including license payments and M-Pesa transaction details.</p>
+                            <ul class="list-unstyled text-start small text-muted">
+                                <li><i class="fas fa-check text-success me-1"></i>Payment amounts and types</li>
+                                <li><i class="fas fa-check text-success me-1"></i>M-Pesa transaction IDs</li>
+                                <li><i class="fas fa-check text-success me-1"></i>Payment status</li>
+                                <li><i class="fas fa-check text-success me-1"></i>Associated businesses</li>
+                            </ul>
+                        </div>
+                        <div class="card-footer">
+                            <a href="{{ url_for('export_payments') }}" class="btn btn-success w-100">
+                                <i class="fas fa-download me-1"></i>Export Payments CSV
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Notes -->
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-2"></i>Export Notes</h6>
+                        <ul class="mb-0 small">
+                            <li>All exports are in CSV format for easy import into Excel or other applications</li>
+                            <li>Data is exported with current timestamp in the filename</li>
+                            <li>Sensitive information like passwords are never included in exports</li>
+                            <li>All dates are in YYYY-MM-DD format for consistency</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

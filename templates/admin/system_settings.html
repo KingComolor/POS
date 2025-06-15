@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}System Settings - Super Admin{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-cogs me-2"></i>System Settings</h2>
+                <a href="{{ url_for('super_admin_dashboard') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            </div>
+
+            <!-- System Statistics -->
+            <div class="row mb-4">
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-building fa-2x text-primary mb-2"></i>
+                            <h4 class="mb-0">{{ stats.total_businesses }}</h4>
+                            <small class="text-muted">Total Businesses</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                            <h4 class="mb-0">{{ stats.active_businesses }}</h4>
+                            <small class="text-muted">Active Businesses</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-users fa-2x text-info mb-2"></i>
+                            <h4 class="mb-0">{{ stats.total_users }}</h4>
+                            <small class="text-muted">Total Users</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-shopping-cart fa-2x text-warning mb-2"></i>
+                            <h4 class="mb-0">{{ stats.total_sales }}</h4>
+                            <small class="text-muted">Total Sales</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-money-bill-wave fa-2x text-success mb-2"></i>
+                            <h4 class="mb-0">KES {{ "{:,.0f}".format(stats.total_revenue) }}</h4>
+                            <small class="text-muted">Total Revenue</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-database fa-2x text-secondary mb-2"></i>
+                            <h4 class="mb-0">{{ stats.database_size }}</h4>
+                            <small class="text-muted">Database Size</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Maintenance -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-tools me-2"></i>System Maintenance</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6><i class="fas fa-broom me-2"></i>Cleanup Old Logs</h6>
+                                    <p class="small text-muted mb-3">Remove activity logs older than 90 days to free up database space.</p>
+                                    <form method="POST" action="{{ url_for('system_maintenance') }}" class="d-inline">
+                                        <input type="hidden" name="action" value="cleanup_logs">
+                                        <button type="submit" class="btn btn-warning btn-sm" 
+                                                onclick="return confirm('This will permanently delete old activity logs. Continue?')">
+                                            <i class="fas fa-trash me-1"></i>Cleanup Logs
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6><i class="fas fa-calendar-times me-2"></i>Mark Expired Licenses</h6>
+                                    <p class="small text-muted mb-3">Find and mark businesses with expired licenses as expired status.</p>
+                                    <form method="POST" action="{{ url_for('system_maintenance') }}" class="d-inline">
+                                        <input type="hidden" name="action" value="expire_licenses">
+                                        <button type="submit" class="btn btn-danger btn-sm" 
+                                                onclick="return confirm('This will mark expired businesses as expired. Continue?')">
+                                            <i class="fas fa-clock me-1"></i>Update Expired
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>System Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Application Details</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>Version:</strong> 1.0.0</li>
+                                <li><strong>Environment:</strong> Production</li>
+                                <li><strong>Database:</strong> PostgreSQL</li>
+                                <li><strong>Server:</strong> Gunicorn</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Key Features</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-1"></i>Multi-tenant architecture</li>
+                                <li><i class="fas fa-check text-success me-1"></i>M-Pesa payment integration</li>
+                                <li><i class="fas fa-check text-success me-1"></i>Automated license management</li>
+                                <li><i class="fas fa-check text-success me-1"></i>Role-based access control</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Settings -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Security Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-lock me-2"></i>Security Features</h6>
+                        <ul class="mb-0 small">
+                            <li>All passwords are hashed using Werkzeug security functions</li>
+                            <li>Session management with secure cookies</li>
+                            <li>Role-based access control for all routes</li>
+                            <li>Activity logging for audit trails</li>
+                            <li>HTTPS enforcement in production</li>
+                            <li>Multi-tenant data isolation</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i>Important Notes</h6>
+                        <ul class="mb-0 small">
+                            <li>Regular database backups are recommended</li>
+                            <li>Monitor license expiry dates for businesses</li>
+                            <li>Review activity logs periodically for security</li>
+                            <li>Keep M-Pesa API credentials secure and updated</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

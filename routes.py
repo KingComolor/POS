@@ -319,13 +319,10 @@ def export_businesses():
             business.created_at.strftime('%Y-%m-%d %H:%M:%S')
         ])
     
-    output.seek(0)
-    return send_file(
-        StringIO(output.getvalue()),
-        mimetype='text/csv',
-        as_attachment=True,
-        download_name=f'businesses_export_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}.csv'
-    )
+    response = make_response(output.getvalue())
+    response.headers['Content-Type'] = 'text/csv'
+    response.headers['Content-Disposition'] = f'attachment; filename=businesses_export_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}.csv'
+    return response
 
 @app.route('/admin/export/payments')
 @login_required
@@ -354,13 +351,10 @@ def export_payments():
             payment.created_at.strftime('%Y-%m-%d %H:%M:%S')
         ])
     
-    output.seek(0)
-    return send_file(
-        StringIO(output.getvalue()),
-        mimetype='text/csv',
-        as_attachment=True,
-        download_name=f'payments_export_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}.csv'
-    )
+    response = make_response(output.getvalue())
+    response.headers['Content-Type'] = 'text/csv'
+    response.headers['Content-Disposition'] = f'attachment; filename=payments_export_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}.csv'
+    return response
 
 # Super Admin - System Settings
 @app.route('/admin/settings')
