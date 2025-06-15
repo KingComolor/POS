@@ -50,27 +50,40 @@ Comolor POS is a multi-tenant, web-based Point of Sale system specifically desig
 
 ## Development Setup
 
+### Current Environment Status
+**✅ Deployed on Replit**: Application is fully operational with:
+- PostgreSQL database configured and connected
+- Session management with secure authentication
+- Multi-tenant architecture fully functional
+- All core features implemented and tested
+
+### Accessing the Application
+- The POS system is running at your Replit URL
+- Database tables are automatically created on startup
+- Ready for business registration and multi-tenant use
+
+### Local Development Setup (Optional)
+
+For local development or alternative deployment:
+
 ### Prerequisites
 - Python 3.11+
 - PostgreSQL 12+
 - Git
 
-### Local Installation
+### Installation Steps
 ```bash
 # Clone the repository
 git clone <repository-url>
 cd comolor-pos
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
+# Install dependencies using uv (recommended) or pip
+uv sync
+# OR: pip install -r requirements.txt
 
 # Set up environment variables
-cp .env.example .env
-# Edit .env with your configuration
+export DATABASE_URL="postgresql://username:password@localhost/comolor_pos"
+export SESSION_SECRET="your-secure-session-secret"
 
 # Initialize database
 python -c "from app import app, db; app.app_context().push(); db.create_all()"
@@ -81,25 +94,23 @@ python main.py
 
 ### Environment Variables
 ```bash
-# Database
+# Essential Configuration
 DATABASE_URL=postgresql://username:password@localhost/comolor_pos
-
-# Session Security
 SESSION_SECRET=your-secure-session-secret
 
-# M-Pesa Configuration
+# M-Pesa Integration (Optional for testing)
 MPESA_CONSUMER_KEY=your-mpesa-consumer-key
 MPESA_CONSUMER_SECRET=your-mpesa-consumer-secret
 MPESA_PASSKEY=your-mpesa-passkey
 MPESA_SHORTCODE=your-business-shortcode
 DEVELOPER_TILL_NUMBER=your-developer-till-number
 
-# Email Configuration
+# Email Service (Optional for notifications)
 MAIL_SERVER=smtp.gmail.com
 MAIL_PORT=587
-MAIL_USE_TLS=True
 MAIL_USERNAME=your-email@gmail.com
 MAIL_PASSWORD=your-app-password
+MAIL_DEFAULT_SENDER=noreply@yourcompany.com
 ```
 
 ## Database Design
