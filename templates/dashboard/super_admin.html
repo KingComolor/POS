@@ -73,6 +73,45 @@
     </div>
 </div>
 
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-lightning-bolt me-2"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('manage_businesses') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-building me-2"></i>
+                            Manage Businesses
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('export_data') }}" class="btn btn-outline-success w-100">
+                            <i class="fas fa-download me-2"></i>
+                            Export Data
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('system_settings') }}" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-cogs me-2"></i>
+                            System Settings
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('view_reports') }}" class="btn btn-outline-info w-100">
+                            <i class="fas fa-chart-line me-2"></i>
+                            View Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <!-- Recent Payments -->
     <div class="col-lg-6">
