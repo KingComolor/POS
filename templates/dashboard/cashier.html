@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Cashier Dashboard - Comolor POS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1>
+            <i class="fas fa-cash-register me-2"></i>
+            Cashier Dashboard
+        </h1>
+        <p class="text-muted mb-0">Welcome back, {{ current_user.name }}</p>
+    </div>
+    <div class="text-end">
+        <div class="text-muted small">
+            <i class="fas fa-clock me-1"></i>
+            {{ moment().format('MMMM Do, YYYY') }}
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-5">
+    <div class="col-md-6">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1">{{ today_sales }}</h3>
+                        <p class="mb-0">My Sales Today</p>
+                    </div>
+                    <i class="fas fa-shopping-cart fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1">KES {{ "{:,.0f}".format(today_revenue) }}</h3>
+                        <p class="mb-0">My Revenue Today</p>
+                    </div>
+                    <i class="fas fa-money-bill fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <h3 class="mb-4">Ready to serve customers?</h3>
+                <a href="{{ url_for('pos_sales') }}" class="btn btn-primary btn-lg me-3">
+                    <i class="fas fa-plus me-2"></i>New Sale
+                </a>
+                <a href="{{ url_for('pos_customers') }}" class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-users me-2"></i>Find Customer
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Sales -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-receipt me-2"></i>
+                    My Recent Sales
+                </h5>
+                <a href="{{ url_for('pos_sales') }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i>New Sale
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_sales %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Sale #</th>
+                                    <th>Customer</th>
+                                    <th>Amount</th>
+                                    <th>Payment Method</th>
+                                    <th>Time</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sale in recent_sales %}
+                                <tr>
+                                    <td><code>{{ sale.sale_number }}</code></td>
+                                    <td>
+                                        {% if sale.customer %}
+                                            {{ sale.customer.name }}
+                                        {% else %}
+                                            Walk-in Customer
+                                        {% endif %}
+                                    </td>
+                                    <td>KES {{ "{:,.2f}".format(sale.total_amount) }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if sale.payment_method == 'mpesa' else 'info' }}">
+                                            {{ sale.payment_method.upper() }}
+                                        </span>
+                                    </td>
+                                    <td>{{ moment(sale.created_at).format('HH:mm') }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if sale.payment_status.value == 'completed' else 'warning' }}">
+                                            {{ sale.payment_status.value.title() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-outline-primary btn-sm" 
+                                                onclick="printReceipt('{{ sale.id }}')">
+                                            <i class="fas fa-print"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No sales recorded today.</p>
+                        <a href="{{ url_for('pos_sales') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Create Your First Sale
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Summary -->
+<div class="row mt-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Today's Performance
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-primary">{{ today_sales }}</h4>
+                        <small class="text-muted">Transactions</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-success">{{ "{:,.0f}".format(today_revenue) }}</h4>
+                        <small class="text-muted">Revenue (KES)</small>
+                    </div>
+                </div>
+                
+                {% if today_sales > 0 %}
+                    <hr>
+                    <div class="text-center">
+                        <p class="mb-0">
+                            <strong>Average Sale:</strong> 
+                            KES {{ "{:,.2f}".format(today_revenue / today_sales) }}
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Quick Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Always verify M-Pesa payments before completing sales
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Print receipts for all cash transactions
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Check product stock levels before adding to cart
+                    </li>
+                    <li class="mb-0">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Record customer information for better service
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+<script>
+    window.moment = moment;
+    
+    function printReceipt(saleId) {
+        // Open receipt in new window for printing
+        window.open(`/receipt/${saleId}`, '_blank', 'width=400,height=600');
+    }
+    
+    // Auto-refresh dashboard every 2 minutes
+    setInterval(function() {
+        location.reload();
+    }, 120000);
+</script>
+{% endblock %}

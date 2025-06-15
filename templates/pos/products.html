@@ -1,0 +1,422 @@
+{% extends "base.html" %}
+
+{% block title %}Products - Comolor POS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="fas fa-box me-2"></i>
+        Product Management
+    </h1>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+        <i class="fas fa-plus me-2"></i>Add Product
+    </button>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1">{{ products | length }}</h3>
+                        <p class="mb-0">Total Products</p>
+                    </div>
+                    <i class="fas fa-box fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1">{{ products | selectattr('is_low_stock') | list | length }}</h3>
+                        <p class="mb-0">Low Stock</p>
+                    </div>
+                    <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1">{{ products | selectattr('is_active') | list | length }}</h3>
+                        <p class="mb-0">Active Products</p>
+                    </div>
+                    <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1">KES {{ "{:,.0f}".format(products | sum(attribute='selling_price')) }}</h3>
+                        <p class="mb-0">Total Value</p>
+                    </div>
+                    <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <input type="text" class="form-control" id="searchProduct" 
+                       placeholder="Search by name, SKU, or barcode...">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="categoryFilter">
+                    <option value="">All Categories</option>
+                    <option value="retail">Retail</option>
+                    <option value="electronics">Electronics</option>
+                    <option value="clothing">Clothing</option>
+                    <option value="food">Food & Beverage</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="low_stock">Low Stock</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary w-100" onclick="exportProducts()">
+                    <i class="fas fa-download me-1"></i>Export
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Products Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Products List</h5>
+    </div>
+    <div class="card-body">
+        {% if products %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>SKU/Barcode</th>
+                        <th>Category</th>
+                        <th>Cost Price</th>
+                        <th>Selling Price</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr class="product-row" 
+                        data-name="{{ product.name.lower() }}"
+                        data-sku="{{ product.sku or '' }}"
+                        data-category="{{ product.category or '' }}"
+                        data-status="{{ 'active' if product.is_active else 'inactive' }}">
+                        <td>
+                            <div>
+                                <strong>{{ product.name }}</strong>
+                                {% if product.description %}
+                                <br><small class="text-muted">{{ product.description[:50] }}{% if product.description|length > 50 %}...{% endif %}</small>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if product.sku %}<code>{{ product.sku }}</code>{% endif %}
+                            {% if product.barcode %}<br><small>{{ product.barcode }}</small>{% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ product.category or 'Other' }}</span>
+                        </td>
+                        <td>KES {{ "{:,.2f}".format(product.cost_price) }}</td>
+                        <td>KES {{ "{:,.2f}".format(product.selling_price) }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'danger' if product.is_low_stock() else 'success' }}">
+                                {{ product.stock_quantity }}
+                            </span>
+                            {% if product.is_low_stock() %}
+                            <br><small class="text-danger">Low Stock!</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if product.is_active else 'secondary' }}">
+                                {{ 'Active' if product.is_active else 'Inactive' }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-outline-primary" 
+                                        onclick="editProduct({{ product.id }})"
+                                        data-bs-toggle="modal" data-bs-target="#editProductModal">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" 
+                                        onclick="adjustStock({{ product.id }})">
+                                    <i class="fas fa-warehouse"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" 
+                                        onclick="deleteProduct({{ product.id }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+            <h5>No Products Found</h5>
+            <p class="text-muted">Start by adding your first product to the inventory.</p>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                <i class="fas fa-plus me-2"></i>Add First Product
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal fade" id="addProductModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>Add New Product
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/pos/products/add" method="POST">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="productName" class="form-label">Product Name *</label>
+                                <input type="text" class="form-control" id="productName" name="name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="productSku" class="form-label">SKU</label>
+                                <input type="text" class="form-control" id="productSku" name="sku">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="productCategory" class="form-label">Category</label>
+                                <select class="form-select" id="productCategory" name="category">
+                                    <option value="">Select Category</option>
+                                    <option value="retail">Retail</option>
+                                    <option value="electronics">Electronics</option>
+                                    <option value="clothing">Clothing</option>
+                                    <option value="food">Food & Beverage</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="productBarcode" class="form-label">Barcode</label>
+                                <input type="text" class="form-control" id="productBarcode" name="barcode">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="productDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="productDescription" name="description" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="costPrice" class="form-label">Cost Price *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">KES</span>
+                                    <input type="number" class="form-control" id="costPrice" name="cost_price" 
+                                           min="0" step="0.01" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="sellingPrice" class="form-label">Selling Price *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">KES</span>
+                                    <input type="number" class="form-control" id="sellingPrice" name="selling_price" 
+                                           min="0" step="0.01" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="stockQuantity" class="form-label">Initial Stock *</label>
+                                <input type="number" class="form-control" id="stockQuantity" name="stock_quantity" 
+                                       min="0" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="minStockLevel" class="form-label">Min Stock Level</label>
+                                <input type="number" class="form-control" id="minStockLevel" name="min_stock_level" 
+                                       min="0" value="5">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Add Product
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Product Modal -->
+<div class="modal fade" id="editProductModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2"></i>Edit Product
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="editProductForm">
+                    <!-- Form will be loaded via JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Adjustment Modal -->
+<div class="modal fade" id="stockAdjustmentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-warehouse me-2"></i>Adjust Stock
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="stockAdjustmentForm">
+                    <!-- Form will be loaded via JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function editProduct(productId) {
+    // Load edit form via AJAX
+    fetch(`/pos/products/${productId}/edit`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('editProductForm').innerHTML = html;
+        });
+}
+
+function adjustStock(productId) {
+    // Load stock adjustment form via AJAX
+    fetch(`/pos/products/${productId}/stock`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('stockAdjustmentForm').innerHTML = html;
+            new bootstrap.Modal(document.getElementById('stockAdjustmentModal')).show();
+        });
+}
+
+function deleteProduct(productId) {
+    if (confirm('Are you sure you want to delete this product?')) {
+        fetch(`/pos/products/${productId}/delete`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Failed to delete product');
+            }
+        });
+    }
+}
+
+function exportProducts() {
+    window.location.href = '/pos/products/export';
+}
+
+// Filter functionality
+document.getElementById('searchProduct').addEventListener('input', filterProducts);
+document.getElementById('categoryFilter').addEventListener('change', filterProducts);
+document.getElementById('statusFilter').addEventListener('change', filterProducts);
+
+function filterProducts() {
+    const searchTerm = document.getElementById('searchProduct').value.toLowerCase();
+    const categoryFilter = document.getElementById('categoryFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+    
+    const rows = document.querySelectorAll('.product-row');
+    
+    rows.forEach(row => {
+        const name = row.dataset.name;
+        const sku = row.dataset.sku;
+        const category = row.dataset.category;
+        const status = row.dataset.status;
+        
+        const matchesSearch = name.includes(searchTerm) || sku.includes(searchTerm);
+        const matchesCategory = !categoryFilter || category === categoryFilter;
+        const matchesStatus = !statusFilter || status === statusFilter;
+        
+        if (matchesSearch && matchesCategory && matchesStatus) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+</script>
+{% endblock %}

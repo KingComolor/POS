@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}Super Admin Dashboard - Comolor POS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="fas fa-crown me-2 text-warning"></i>
+        Super Admin Dashboard
+    </h1>
+    <div class="text-muted">
+        <i class="fas fa-clock me-1"></i>
+        {{ moment().format('MMMM Do, YYYY') }}
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1">{{ total_businesses }}</h3>
+                        <p class="mb-0">Total Businesses</p>
+                    </div>
+                    <i class="fas fa-building fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1">{{ active_businesses }}</h3>
+                        <p class="mb-0">Active Licenses</p>
+                    </div>
+                    <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1">{{ pending_businesses }}</h3>
+                        <p class="mb-0">Pending Approval</p>
+                    </div>
+                    <i class="fas fa-clock fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1">KES {{ "{:,.0f}".format(total_revenue) }}</h3>
+                        <p class="mb-0">Total Revenue</p>
+                    </div>
+                    <i class="fas fa-money-bill fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Payments -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-credit-card me-2"></i>
+                    Recent License Payments
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_payments %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Business</th>
+                                    <th>Amount</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in recent_payments %}
+                                <tr>
+                                    <td>
+                                        {% if payment.business %}
+                                            {{ payment.business.name }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>KES {{ "{:,.0f}".format(payment.amount) }}</td>
+                                    <td>{{ moment(payment.created_at).format('MMM DD') }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if payment.status.value == 'completed' else 'warning' }}">
+                                            {{ payment.status.value.title() }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No recent payments found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Businesses -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-building me-2"></i>
+                    Recent Business Registrations
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_businesses %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Business</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Registered</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for business in recent_businesses %}
+                                <tr>
+                                    <td>{{ business.name }}</td>
+                                    <td>{{ business.business_type.title() }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if business.status.value == 'active' else 'warning' if business.status.value == 'pending' else 'danger' }}">
+                                            {{ business.status.value.title() }}
+                                        </span>
+                                    </td>
+                                    <td>{{ moment(business.created_at).format('MMM DD') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No recent businesses found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-tools me-2"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-primary w-100">
+                            <i class="fas fa-users d-block fa-2x mb-2"></i>
+                            Manage Businesses
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-success w-100">
+                            <i class="fas fa-chart-bar d-block fa-2x mb-2"></i>
+                            View Reports
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-info w-100">
+                            <i class="fas fa-cog d-block fa-2x mb-2"></i>
+                            System Settings
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-warning w-100">
+                            <i class="fas fa-file-export d-block fa-2x mb-2"></i>
+                            Export Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+<script>
+    // Initialize moment.js for template
+    window.moment = moment;
+    
+    // Auto-refresh dashboard every 5 minutes
+    setInterval(function() {
+        location.reload();
+    }, 300000);
+</script>
+{% endblock %}

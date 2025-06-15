@@ -1,0 +1,383 @@
+{% extends "base.html" %}
+
+{% block title %}Business Settings - Comolor POS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="fas fa-cog me-2"></i>
+        Business Settings
+    </h1>
+    <div class="badge bg-{{ 'success' if current_user.business.is_license_active() else 'danger' }} fs-6">
+        License: {{ 'Active' if current_user.business.is_license_active() else 'Expired' }}
+    </div>
+</div>
+
+<div class="row">
+    <!-- Business Information -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-building me-2"></i>
+                    Business Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form action="/pos/settings/business" method="POST" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="businessName" class="form-label">Business Name</label>
+                                <input type="text" class="form-control" id="businessName" name="name" 
+                                       value="{{ current_user.business.name }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="businessType" class="form-label">Business Type</label>
+                                <select class="form-select" id="businessType" name="business_type">
+                                    <option value="retail" {{ 'selected' if current_user.business.business_type == 'retail' }}>Retail Store</option>
+                                    <option value="restaurant" {{ 'selected' if current_user.business.business_type == 'restaurant' }}>Restaurant/Cafe</option>
+                                    <option value="pharmacy" {{ 'selected' if current_user.business.business_type == 'pharmacy' }}>Pharmacy</option>
+                                    <option value="supermarket" {{ 'selected' if current_user.business.business_type == 'supermarket' }}>Supermarket</option>
+                                    <option value="electronics" {{ 'selected' if current_user.business.business_type == 'electronics' }}>Electronics</option>
+                                    <option value="clothing" {{ 'selected' if current_user.business.business_type == 'clothing' }}>Clothing Store</option>
+                                    <option value="hardware" {{ 'selected' if current_user.business.business_type == 'hardware' }}>Hardware Store</option>
+                                    <option value="other" {{ 'selected' if current_user.business.business_type == 'other' }}>Other</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="businessEmail" class="form-label">Business Email</label>
+                                <input type="email" class="form-control" id="businessEmail" name="email" 
+                                       value="{{ current_user.business.email }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="businessPhone" class="form-label">Business Phone</label>
+                                <input type="tel" class="form-control" id="businessPhone" name="phone" 
+                                       value="{{ current_user.business.phone }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="businessAddress" class="form-label">Business Address</label>
+                        <textarea class="form-control" id="businessAddress" name="address" rows="2">{{ current_user.business.address }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="businessLogo" class="form-label">Business Logo</label>
+                        <input type="file" class="form-control" id="businessLogo" name="logo" accept="image/*">
+                        {% if current_user.business.logo_url %}
+                        <div class="mt-2">
+                            <img src="{{ current_user.business.logo_url }}" alt="Current Logo" class="img-thumbnail" style="max-height: 100px;">
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Save Business Information
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- M-Pesa Settings -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-mobile-alt me-2"></i>
+                    M-Pesa Settings
+                </h5>
+            </div>
+            <div class="card-body">
+                <form action="/pos/settings/mpesa" method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="tillNumber" class="form-label">Till Number</label>
+                                <input type="text" class="form-control" id="tillNumber" name="till_number" 
+                                       value="{{ current_user.business.till_number }}" 
+                                       placeholder="e.g., 5076965">
+                                <div class="form-text">Your business M-Pesa Till Number for receiving payments</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="paybillNumber" class="form-label">Paybill Number (Optional)</label>
+                                <input type="text" class="form-control" id="paybillNumber" name="paybill_number" 
+                                       placeholder="e.g., 123456">
+                                <div class="form-text">Alternative to Till Number</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Important:</strong> Make sure your Till Number is correct. All customer payments will be directed to this number.
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Save M-Pesa Settings
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tax Settings -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-percentage me-2"></i>
+                    Tax Settings
+                </h5>
+            </div>
+            <div class="card-body">
+                <form action="/pos/settings/tax" method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="taxRate" class="form-label">Tax Rate (%)</label>
+                                <input type="number" class="form-control" id="taxRate" name="tax_rate" 
+                                       min="0" max="100" step="0.01" 
+                                       value="{{ current_user.business.tax_rate }}">
+                                <div class="form-text">Leave blank or set to 0 if no tax applies</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="currency" class="form-label">Currency</label>
+                                <select class="form-select" id="currency" name="currency">
+                                    <option value="KES" {{ 'selected' if current_user.business.currency == 'KES' }}>KES - Kenyan Shilling</option>
+                                    <option value="USD" {{ 'selected' if current_user.business.currency == 'USD' }}>USD - US Dollar</option>
+                                    <option value="EUR" {{ 'selected' if current_user.business.currency == 'EUR' }}>EUR - Euro</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Save Tax Settings
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Receipt Settings -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-receipt me-2"></i>
+                    Receipt Settings
+                </h5>
+            </div>
+            <div class="card-body">
+                <form action="/pos/settings/receipt" method="POST">
+                    <div class="mb-3">
+                        <label for="receiptHeader" class="form-label">Receipt Header</label>
+                        <textarea class="form-control" id="receiptHeader" name="receipt_header" rows="3" 
+                                  placeholder="Thank you for shopping with us!">{{ current_user.business.receipt_header or '' }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="receiptFooter" class="form-label">Receipt Footer</label>
+                        <textarea class="form-control" id="receiptFooter" name="receipt_footer" rows="2" 
+                                  placeholder="Visit us again soon!">{{ current_user.business.receipt_footer or '' }}</textarea>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="printLogo" name="print_logo" 
+                               {{ 'checked' if current_user.business.print_logo }}>
+                        <label class="form-check-label" for="printLogo">
+                            Print business logo on receipts
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Save Receipt Settings
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- License Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-certificate me-2"></i>
+                    License Information
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if current_user.business.is_license_active() %}
+                    <div class="text-success mb-2">
+                        <i class="fas fa-check-circle me-2"></i>
+                        License Active
+                    </div>
+                    <p class="mb-1"><strong>Plan:</strong> {{ current_user.business.subscription_plan.title() }}</p>
+                    <p class="mb-1"><strong>Expires:</strong> {{ moment(current_user.business.license_expires_at).format('MMM DD, YYYY') }}</p>
+                    <p class="mb-3"><strong>Days Remaining:</strong> {{ current_user.business.days_until_expiry() }}</p>
+                    
+                    {% if current_user.business.days_until_expiry() <= 5 %}
+                        <div class="alert alert-warning alert-sm mb-3">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            License expires soon!
+                        </div>
+                    {% endif %}
+                    
+                    <a href="{{ url_for('license_payment') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-credit-card me-2"></i>Renew License
+                    </a>
+                {% else %}
+                    <div class="text-danger mb-2">
+                        <i class="fas fa-times-circle me-2"></i>
+                        License Expired
+                    </div>
+                    <p class="mb-3">Your license has expired. Renew to continue using Comolor POS.</p>
+                    <a href="{{ url_for('license_payment') }}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-credit-card me-2"></i>Renew Now
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Quick Stats
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-primary">{{ current_user.business.products | length }}</h4>
+                        <small class="text-muted">Products</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-success">{{ current_user.business.customers | length }}</h4>
+                        <small class="text-muted">Customers</small>
+                    </div>
+                </div>
+                <hr>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-info">{{ current_user.business.sales | length }}</h4>
+                        <small class="text-muted">Total Sales</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-warning">{{ current_user.business.users | length }}</h4>
+                        <small class="text-muted">Staff</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Management -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-database me-2"></i>
+                    Data Management
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-info btn-sm" onclick="exportData('products')">
+                        <i class="fas fa-download me-2"></i>Export Products
+                    </button>
+                    <button class="btn btn-outline-info btn-sm" onclick="exportData('customers')">
+                        <i class="fas fa-download me-2"></i>Export Customers
+                    </button>
+                    <button class="btn btn-outline-info btn-sm" onclick="exportData('sales')">
+                        <i class="fas fa-download me-2"></i>Export Sales
+                    </button>
+                    <hr>
+                    <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
+                        <i class="fas fa-upload me-2"></i>Import Data
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="backupData()">
+                        <i class="fas fa-cloud-download-alt me-2"></i>Backup Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import Data Modal -->
+<div class="modal fade" id="importModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-upload me-2"></i>Import Data
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/pos/settings/import" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="dataType" class="form-label">Data Type</label>
+                        <select class="form-select" id="dataType" name="data_type" required>
+                            <option value="">Select data type</option>
+                            <option value="products">Products</option>
+                            <option value="customers">Customers</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="importFile" class="form-label">CSV File</label>
+                        <input type="file" class="form-control" id="importFile" name="file" accept=".csv" required>
+                        <div class="form-text">Upload a CSV file with the appropriate columns</div>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> Importing data will add new records. Existing records with the same identifiers may be updated.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload me-2"></i>Import Data
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+<script>
+window.moment = moment;
+
+function exportData(type) {
+    window.location.href = `/pos/settings/export?type=${type}`;
+}
+
+function backupData() {
+    if (confirm('Create a backup of all your business data?')) {
+        window.location.href = '/pos/settings/backup';
+    }
+}
+
+// Form validation
+document.addEventListener('DOMContentLoaded', function() {
+    // Add any form validation logic here
+});
+</script>
+{% endblock %}

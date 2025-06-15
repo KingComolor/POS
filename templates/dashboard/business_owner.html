@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Business Dashboard - Comolor POS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1>
+            <i class="fas fa-tachometer-alt me-2"></i>
+            Business Dashboard
+        </h1>
+        <p class="text-muted mb-0">{{ business.name }}</p>
+    </div>
+    <div class="text-end">
+        <div class="badge bg-{{ 'success' if business.is_license_active() else 'danger' }} fs-6 mb-2">
+            License: {{ 'Active' if business.is_license_active() else 'Expired' }}
+        </div>
+        <div class="text-muted small">
+            {% if business.is_license_active() %}
+                {{ business.days_until_expiry() }} days remaining
+            {% else %}
+                <a href="{{ url_for('license_payment') }}" class="text-warning">Renew License</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1">{{ today_sales }}</h3>
+                        <p class="mb-0">Today's Sales</p>
+                    </div>
+                    <i class="fas fa-shopping-cart fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1">KES {{ "{:,.0f}".format(today_revenue) }}</h3>
+                        <p class="mb-0">Today's Revenue</p>
+                    </div>
+                    <i class="fas fa-money-bill fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1">{{ total_products }}</h3>
+                        <p class="mb-0">Total Products</p>
+                    </div>
+                    <i class="fas fa-box fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1">{{ low_stock_products }}</h3>
+                        <p class="mb-0">Low Stock Alerts</p>
+                    </div>
+                    <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Sales -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-receipt me-2"></i>
+                    Recent Sales
+                </h5>
+                <a href="{{ url_for('pos_sales') }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i>New Sale
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_sales %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Sale #</th>
+                                    <th>Customer</th>
+                                    <th>Amount</th>
+                                    <th>Payment</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sale in recent_sales %}
+                                <tr>
+                                    <td><code>{{ sale.sale_number }}</code></td>
+                                    <td>
+                                        {% if sale.customer %}
+                                            {{ sale.customer.name }}
+                                        {% else %}
+                                            Walk-in Customer
+                                        {% endif %}
+                                    </td>
+                                    <td>KES {{ "{:,.2f}".format(sale.total_amount) }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if sale.payment_method == 'mpesa' else 'info' }}">
+                                            {{ sale.payment_method.upper() }}
+                                        </span>
+                                    </td>
+                                    <td>{{ moment(sale.created_at).format('MMM DD, HH:mm') }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if sale.payment_status.value == 'completed' else 'warning' }}">
+                                            {{ sale.payment_status.value.title() }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No sales recorded yet.</p>
+                        <a href="{{ url_for('pos_sales') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Create Your First Sale
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('pos_sales') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>New Sale
+                    </a>
+                    <a href="{{ url_for('pos_products') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-box me-2"></i>Manage Products
+                    </a>
+                    <a href="{{ url_for('pos_customers') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-users me-2"></i>Manage Customers
+                    </a>
+                    <button class="btn btn-outline-secondary">
+                        <i class="fas fa-chart-bar me-2"></i>View Reports
+                    </button>
+                    <button class="btn btn-outline-secondary">
+                        <i class="fas fa-cog me-2"></i>Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- License Status -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-certificate me-2"></i>
+                    License Status
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if business.is_license_active() %}
+                    <div class="text-success mb-2">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Active License
+                    </div>
+                    <p class="mb-1"><strong>Plan:</strong> {{ business.subscription_plan.title() }}</p>
+                    <p class="mb-1"><strong>Expires:</strong> {{ moment(business.license_expires_at).format('MMM DD, YYYY') }}</p>
+                    <p class="mb-3"><strong>Days Left:</strong> {{ business.days_until_expiry() }}</p>
+                    
+                    {% if business.days_until_expiry() <= 5 %}
+                        <div class="alert alert-warning alert-sm">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            License expires soon! <a href="{{ url_for('license_payment') }}">Renew now</a>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-danger mb-2">
+                        <i class="fas fa-times-circle me-2"></i>
+                        License Expired
+                    </div>
+                    <p class="mb-3">Your license has expired. Renew to continue using Comolor POS.</p>
+                    <a href="{{ url_for('license_payment') }}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-credit-card me-2"></i>Renew License
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+<script>
+    window.moment = moment;
+    
+    // Auto-refresh dashboard every 2 minutes
+    setInterval(function() {
+        location.reload();
+    }, 120000);
+</script>
+{% endblock %}

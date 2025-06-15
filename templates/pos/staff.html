@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Management - Comolor POS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="fas fa-user-tie me-2"></i>
+        Staff Management
+    </h1>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStaffModal">
+        <i class="fas fa-user-plus me-2"></i>Add Staff Member
+    </button>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1">5</h3>
+                        <p class="mb-0">Total Staff</p>
+                    </div>
+                    <i class="fas fa-users fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1">4</h3>
+                        <p class="mb-0">Active Staff</p>
+                    </div>
+                    <i class="fas fa-user-check fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1">2</h3>
+                        <p class="mb-0">Cashiers</p>
+                    </div>
+                    <i class="fas fa-cash-register fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Staff Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Staff Members</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Staff Member</th>
+                        <th>Role</th>
+                        <th>Contact</th>
+                        <th>Sales Today</th>
+                        <th>Status</th>
+                        <th>Last Login</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div>
+                                <strong>{{ current_user.name }}</strong>
+                                <br><small class="text-muted">Business Owner</small>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-success">Owner</span>
+                        </td>
+                        <td>
+                            <div>{{ current_user.email }}</div>
+                            {% if current_user.phone %}
+                            <div><small>{{ current_user.phone }}</small></div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-info">15 sales</span>
+                            <br><small class="text-muted">KES 45,300</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-success">Active</span>
+                        </td>
+                        <td>
+                            <span class="text-success">Online</span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" disabled>
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="fas fa-users fa-2x mb-2"></i>
+                            <p>No additional staff members added yet.</p>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStaffModal">
+                                <i class="fas fa-user-plus me-2"></i>Add First Staff Member
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Staff Modal -->
+<div class="modal fade" id="addStaffModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-plus me-2"></i>Add Staff Member
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/pos/staff/add" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="staffName" class="form-label">Full Name *</label>
+                        <input type="text" class="form-control" id="staffName" name="name" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="staffEmail" class="form-label">Email Address *</label>
+                                <input type="email" class="form-control" id="staffEmail" name="email" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="staffPhone" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="staffPhone" name="phone">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="staffRole" class="form-label">Role *</label>
+                        <select class="form-select" id="staffRole" name="role" required>
+                            <option value="">Select Role</option>
+                            <option value="cashier">Cashier</option>
+                            <option value="manager">Manager</option>
+                        </select>
+                        <div class="form-text">
+                            <strong>Cashier:</strong> Can process sales and view customers<br>
+                            <strong>Manager:</strong> Full access to products and reports
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="staffPassword" class="form-label">Temporary Password *</label>
+                        <input type="password" class="form-control" id="staffPassword" name="password" required>
+                        <div class="form-text">Staff member will be required to change password on first login</div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        An email will be sent to the staff member with their login credentials.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Add Staff Member
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Role Permissions Info -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    Role Permissions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6 class="text-success">Business Owner</h6>
+                        <ul class="list-unstyled mb-0">
+                            <li><i class="fas fa-check text-success me-2"></i>Full system access</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Manage staff</li>
+                            <li><i class="fas fa-check text-success me-2"></i>View all reports</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Business settings</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <h6 class="text-info">Manager</h6>
+                        <ul class="list-unstyled mb-0">
+                            <li><i class="fas fa-check text-success me-2"></i>Process sales</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Manage products</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Manage customers</li>
+                            <li><i class="fas fa-check text-success me-2"></i>View reports</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <h6 class="text-warning">Cashier</h6>
+                        <ul class="list-unstyled mb-0">
+                            <li><i class="fas fa-check text-success me-2"></i>Process sales</li>
+                            <li><i class="fas fa-check text-success me-2"></i>View products</li>
+                            <li><i class="fas fa-check text-success me-2"></i>View customers</li>
+                            <li><i class="fas fa-times text-danger me-2"></i>Limited reports</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function editStaff(staffId) {
+    // Implementation for editing staff
+    console.log('Edit staff:', staffId);
+}
+
+function deleteStaff(staffId) {
+    if (confirm('Are you sure you want to remove this staff member?')) {
+        // Implementation for deleting staff
+        console.log('Delete staff:', staffId);
+    }
+}
+
+function resetPassword(staffId) {
+    if (confirm('Send password reset email to this staff member?')) {
+        // Implementation for password reset
+        console.log('Reset password for staff:', staffId);
+    }
+}
+</script>
+{% endblock %}

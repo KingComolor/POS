@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+
+{% block title %}License Payment - Comolor POS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header text-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-credit-card me-2"></i>
+                    Activate Your Comolor POS License
+                </h4>
+            </div>
+            <div class="card-body">
+                {% if business and business.is_license_active() %}
+                    <!-- License Active -->
+                    <div class="alert alert-success text-center">
+                        <i class="fas fa-check-circle fa-3x mb-3"></i>
+                        <h5>License Active!</h5>
+                        <p>Your Comolor POS license is currently active and expires on {{ moment(business.license_expires_at).format('MMMM Do, YYYY') }}.</p>
+                        <p><strong>{{ business.days_until_expiry() }}</strong> days remaining</p>
+                    </div>
+                    
+                    {% if business.days_until_expiry() <= 30 %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Your license will expire soon. Renew now to avoid service interruption.
+                    </div>
+                    {% endif %}
+                
+                {% else %}
+                    <!-- License Expired or Not Active -->
+                    <div class="alert alert-warning text-center">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                        <h5>License Required</h5>
+                        <p>Your Comolor POS license {{ 'has expired' if business and business.license_expires_at else 'needs to be activated' }}. Please choose a plan below to continue using the system.</p>
+                    </div>
+                {% endif %}
+
+                <!-- Subscription Plans -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div class="card h-100 border-primary">
+                            <div class="card-header bg-primary text-white text-center">
+                                <h5 class="mb-0">Monthly Plan</h5>
+                            </div>
+                            <div class="card-body text-center">
+                                <div class="display-4 text-primary mb-3">
+                                    <strong>KES 3,000</strong>
+                                </div>
+                                <p class="text-muted mb-4">per month</p>
+                                
+                                <ul class="list-unstyled mb-4">
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Complete POS System
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        M-Pesa Integration
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Inventory Management
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Sales Reports
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Cloud Backup
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        24/7 Support
+                                    </li>
+                                </ul>
+                                
+                                <button class="btn btn-primary btn-lg w-100" 
+                                        onclick="selectPlan('monthly', 3000)">
+                                    Choose Monthly
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card h-100 border-success position-relative">
+                            <div class="position-absolute top-0 start-50 translate-middle">
+                                <span class="badge bg-success">Best Value</span>
+                            </div>
+                            <div class="card-header bg-success text-white text-center">
+                                <h5 class="mb-0">Yearly Plan</h5>
+                            </div>
+                            <div class="card-body text-center">
+                                <div class="display-4 text-success mb-3">
+                                    <strong>KES 30,000</strong>
+                                </div>
+                                <p class="text-muted mb-2">per year</p>
+                                <p class="text-success mb-4">
+                                    <small><strong>Save KES 6,000!</strong> (2 months free)</small>
+                                </p>
+                                
+                                <ul class="list-unstyled mb-4">
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Complete POS System
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        M-Pesa Integration
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Inventory Management
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Sales Reports
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Cloud Backup
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Priority Support
+                                    </li>
+                                </ul>
+                                
+                                <button class="btn btn-success btn-lg w-100" 
+                                        onclick="selectPlan('yearly', 30000)">
+                                    Choose Yearly
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Instructions -->
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="fas fa-mobile-alt me-2"></i>
+                            How to Pay
+                        </h6>
+                        <ol class="mb-0">
+                            <li>Select your preferred plan above</li>
+                            <li>Enter your M-Pesa phone number</li>
+                            <li>You'll receive an STK push on your phone</li>
+                            <li>Enter your M-Pesa PIN to complete payment</li>
+                            <li>Your license will be activated automatically</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Support Information -->
+                <div class="mt-4 text-center">
+                    <p class="text-muted">
+                        Need help? Contact our support team at 
+                        <a href="mailto:support@comolor.com">support@comolor.com</a> 
+                        or call +254 700 000 000
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-mobile-alt me-2"></i>
+                    Complete M-Pesa Payment
+                </h5>
+            </div>
+            <div class="modal-body">
+                <form id="paymentForm">
+                    <div class="mb-3">
+                        <label for="selectedPlan" class="form-label">Selected Plan</label>
+                        <input type="text" class="form-control" id="selectedPlan" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="paymentAmount" class="form-label">Amount to Pay</label>
+                        <div class="input-group">
+                            <span class="input-group-text">KES</span>
+                            <input type="text" class="form-control" id="paymentAmount" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="phoneNumber" class="form-label">M-Pesa Phone Number *</label>
+                        <input type="tel" class="form-control" id="phoneNumber" name="phone" 
+                               placeholder="0712345678" required>
+                        <div class="form-text">Enter the phone number registered with M-Pesa</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="tillNumber" class="form-label">Till Number</label>
+                        <input type="text" class="form-control" id="tillNumber" 
+                               value="{{ config.DEVELOPER_TILL_NUMBER }}" readonly>
+                        <div class="form-text">This is the Till Number for Comolor POS license payments</div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        You will receive an STK push notification on your phone. Enter your M-Pesa PIN to complete the payment.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="cancelPayment()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="initiatePayment()" id="payBtn">
+                    <i class="fas fa-credit-card me-2"></i>
+                    Pay Now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Processing Modal -->
+<div class="modal fade" id="processingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h6>Processing Payment...</h6>
+                <p class="mb-0 text-muted">Please complete the payment on your phone</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+<script>
+window.moment = moment;
+
+let selectedPlan = null;
+let selectedAmount = 0;
+
+function selectPlan(plan, amount) {
+    selectedPlan = plan;
+    selectedAmount = amount;
+    
+    document.getElementById('selectedPlan').value = plan.charAt(0).toUpperCase() + plan.slice(1) + ' Plan';
+    document.getElementById('paymentAmount').value = amount.toLocaleString();
+    
+    // Show payment modal
+    new bootstrap.Modal(document.getElementById('paymentModal')).show();
+}
+
+function cancelPayment() {
+    selectedPlan = null;
+    selectedAmount = 0;
+    bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+}
+
+function initiatePayment() {
+    const phoneNumber = document.getElementById('phoneNumber').value;
+    
+    if (!phoneNumber) {
+        alert('Please enter your M-Pesa phone number');
+        return;
+    }
+    
+    // Validate phone number format
+    const phoneRegex = /^(254|0)[17]\d{8}$/;
+    if (!phoneRegex.test(phoneNumber.replace(/\s+/g, ''))) {
+        alert('Please enter a valid Kenyan phone number');
+        return;
+    }
+    
+    // Show processing modal
+    bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+    new bootstrap.Modal(document.getElementById('processingModal')).show();
+    
+    // Submit payment request
+    fetch('/license/initiate-payment', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            'plan': selectedPlan,
+            'phone': phoneNumber
+        })
+    })
+    .then(response => {
+        if (response.ok) {
+            // Redirect to status page
+            window.location.href = '/license/status';
+        } else {
+            bootstrap.Modal.getInstance(document.getElementById('processingModal')).hide();
+            alert('Payment initiation failed. Please try again.');
+        }
+    })
+    .catch(error => {
+        bootstrap.Modal.getInstance(document.getElementById('processingModal')).hide();
+        alert('An error occurred. Please try again.');
+        console.error('Payment error:', error);
+    });
+}
+
+// Pre-fill phone number if available
+document.addEventListener('DOMContentLoaded', function() {
+    const userPhone = '{{ current_user.phone or "" }}';
+    if (userPhone) {
+        document.getElementById('phoneNumber').value = userPhone;
+    }
+});
+</script>
+{% endblock %}

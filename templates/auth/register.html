@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Comolor POS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header text-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Register Your Business
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address *</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" placeholder="0712345678">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="business_type" class="form-label">Business Type *</label>
+                                <select class="form-select" id="business_type" name="business_type" required>
+                                    <option value="">Select Business Type</option>
+                                    <option value="retail">Retail Store</option>
+                                    <option value="restaurant">Restaurant/Cafe</option>
+                                    <option value="pharmacy">Pharmacy</option>
+                                    <option value="supermarket">Supermarket</option>
+                                    <option value="electronics">Electronics</option>
+                                    <option value="clothing">Clothing Store</option>
+                                    <option value="hardware">Hardware Store</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="business_name" class="form-label">Business Name *</label>
+                        <input type="text" class="form-control" id="business_name" name="business_name" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password *</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                                <div class="form-text">Minimum 8 characters</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="confirm_password" class="form-label">Confirm Password *</label>
+                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="terms_accepted" name="terms_accepted" required>
+                        <label class="form-check-label" for="terms_accepted">
+                            I agree to the <a href="{{ url_for('terms') }}" target="_blank">Terms and Conditions</a> 
+                            and <a href="{{ url_for('privacy') }}" target="_blank">Privacy Policy</a> *
+                        </label>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-user-plus me-2"></i>
+                            Register Business
+                        </button>
+                    </div>
+                </form>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <p class="mb-0">
+                        Already have an account?
+                        <a href="{{ url_for('login') }}" class="text-decoration-none">
+                            Login here
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <div class="alert alert-info">
+                <h6><i class="fas fa-info-circle me-2"></i>What happens next?</h6>
+                <ol class="mb-0">
+                    <li>Complete your registration</li>
+                    <li>Proceed to license payment (KES 3,000/month or KES 30,000/year)</li>
+                    <li>Your account will be activated automatically after payment</li>
+                    <li>Start using your POS system immediately!</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

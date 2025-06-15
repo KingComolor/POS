@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+
+{% block title %}POS Sales - Comolor POS{% endblock %}
+
+{% block extra_head %}
+<style>
+    .product-grid {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    .cart-summary {
+        position: sticky;
+        top: 20px;
+    }
+    .product-card {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .product-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .cart-item {
+        border-bottom: 1px solid var(--bs-border-color);
+    }
+    .payment-method-selector {
+        display: none;
+    }
+    .payment-method-selector.active {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="fas fa-shopping-cart me-2"></i>
+        Point of Sale
+    </h1>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary" onclick="clearCart()">
+            <i class="fas fa-trash me-1"></i>Clear Cart
+        </button>
+        <button class="btn btn-success" onclick="showCheckout()" id="checkoutBtn" disabled>
+            <i class="fas fa-credit-card me-1"></i>Checkout
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Products Section -->
+    <div class="col-lg-8">
+        <!-- Search Bar -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" id="productSearch" 
+                               placeholder="Search products by name, SKU, or barcode..." 
+                               onkeyup="filterProducts()">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="categoryFilter" onchange="filterProducts()">
+                            <option value="">All Categories</option>
+                            <option value="retail">Retail</option>
+                            <option value="electronics">Electronics</option>
+                            <option value="clothing">Clothing</option>
+                            <option value="food">Food & Beverage</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-primary w-100" onclick="scanBarcode()">
+                            <i class="fas fa-barcode me-1"></i>Scan Barcode
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-box me-2"></i>
+                    Products
+                </h5>
+            </div>
+            <div class="card-body product-grid">
+                <div class="row g-3" id="productsGrid">
+                    {% for product in products %}
+                    <div class="col-md-4 col-lg-3 product-item" 
+                         data-category="{{ product.category }}" 
+                         data-name="{{ product.name.lower() }}"
+                         data-sku="{{ product.sku or '' }}">
+                        <div class="card product-card h-100" onclick="addToCart({{ product.id }})">
+                            <div class="card-body p-3">
+                                <h6 class="card-title mb-2">{{ product.name }}</h6>
+                                <p class="card-text small text-muted mb-2">
+                                    {% if product.sku %}SKU: {{ product.sku }}{% endif %}
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0 text-success">KES {{ "{:,.2f}".format(product.selling_price) }}</h6>
+                                        <small class="text-muted">Stock: {{ product.stock_quantity }}</small>
+                                    </div>
+                                    <button class="btn btn-sm btn-primary">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                {% if not products %}
+                <div class="text-center py-5">
+                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No products available.</p>
+                    <a href="{{ url_for('pos_products') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Add Products
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Section -->
+    <div class="col-lg-4">
+        <div class="cart-summary">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shopping-cart me-2"></i>
+                        Shopping Cart
+                        <span class="badge bg-primary ms-2" id="cartCount">0</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Customer Selection -->
+                    <div class="mb-3">
+                        <label class="form-label">Customer (Optional)</label>
+                        <select class="form-select" id="customerSelect">
+                            <option value="">Walk-in Customer</option>
+                            {% for customer in customers %}
+                            <option value="{{ customer.id }}">{{ customer.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Cart Items -->
+                    <div id="cartItems" class="mb-3" style="max-height: 300px; overflow-y: auto;">
+                        <div class="text-center text-muted py-4" id="emptyCart">
+                            <i class="fas fa-shopping-cart fa-2x mb-2"></i>
+                            <p>Cart is empty</p>
+                        </div>
+                    </div>
+
+                    <!-- Cart Summary -->
+                    <div class="border-top pt-3">
+                        <div class="row mb-2">
+                            <div class="col">Subtotal:</div>
+                            <div class="col-auto">
+                                <strong id="subtotal">KES 0.00</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-2">
+                            <div class="col">
+                                <label for="discountAmount">Discount:</label>
+                            </div>
+                            <div class="col-auto">
+                                <input type="number" class="form-control form-control-sm" 
+                                       id="discountAmount" style="width: 100px;" 
+                                       min="0" step="0.01" value="0" onchange="updateTotals()">
+                            </div>
+                        </div>
+                        
+                        {% if current_user.business.tax_rate %}
+                        <div class="row mb-2">
+                            <div class="col">Tax ({{ current_user.business.tax_rate }}%):</div>
+                            <div class="col-auto">
+                                <strong id="taxAmount">KES 0.00</strong>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            <div class="col">
+                                <h5>Total:</h5>
+                            </div>
+                            <div class="col-auto">
+                                <h5 class="text-success" id="totalAmount">KES 0.00</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Checkout Modal -->
+<div class="modal fade" id="checkoutModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-credit-card me-2"></i>
+                    Complete Payment
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Payment Method Selection -->
+                <div class="mb-3">
+                    <label class="form-label">Payment Method</label>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <input type="radio" class="btn-check" name="paymentMethod" 
+                                   id="cashPayment" value="cash" onchange="selectPaymentMethod('cash')">
+                            <label class="btn btn-outline-success w-100" for="cashPayment">
+                                <i class="fas fa-money-bill d-block fa-2x mb-1"></i>
+                                Cash
+                            </label>
+                        </div>
+                        <div class="col-6">
+                            <input type="radio" class="btn-check" name="paymentMethod" 
+                                   id="mpesaPayment" value="mpesa" onchange="selectPaymentMethod('mpesa')">
+                            <label class="btn btn-outline-primary w-100" for="mpesaPayment">
+                                <i class="fas fa-mobile-alt d-block fa-2x mb-1"></i>
+                                M-Pesa
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cash Payment -->
+                <div id="cashPaymentDetails" class="payment-method-selector">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Cash payment will be recorded immediately. Make sure to collect the exact amount.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Amount to Pay</label>
+                        <input type="number" class="form-control" id="cashAmount" readonly>
+                    </div>
+                </div>
+
+                <!-- M-Pesa Payment -->
+                <div id="mpesaPaymentDetails" class="payment-method-selector">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-mobile-alt me-2"></i>
+                        Customer will receive M-Pesa prompt on their phone. Payment will be verified automatically.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Customer Phone Number</label>
+                        <input type="tel" class="form-control" id="customerPhone" 
+                               placeholder="0712345678" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Till Number</label>
+                        <input type="text" class="form-control" 
+                               value="{{ current_user.business.till_number or 'Not configured' }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Amount to Pay</label>
+                        <input type="number" class="form-control" id="mpesaAmount" readonly>
+                    </div>
+                </div>
+
+                <!-- Order Summary -->
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title">Order Summary</h6>
+                        <div class="row">
+                            <div class="col">Items:</div>
+                            <div class="col-auto" id="checkoutItemCount">0</div>
+                        </div>
+                        <div class="row">
+                            <div class="col">Subtotal:</div>
+                            <div class="col-auto" id="checkoutSubtotal">KES 0.00</div>
+                        </div>
+                        <div class="row">
+                            <div class="col">Discount:</div>
+                            <div class="col-auto" id="checkoutDiscount">KES 0.00</div>
+                        </div>
+                        {% if current_user.business.tax_rate %}
+                        <div class="row">
+                            <div class="col">Tax:</div>
+                            <div class="col-auto" id="checkoutTax">KES 0.00</div>
+                        </div>
+                        {% endif %}
+                        <hr>
+                        <div class="row">
+                            <div class="col"><strong>Total:</strong></div>
+                            <div class="col-auto"><strong id="checkoutTotal">KES 0.00</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="processSale()" id="processSaleBtn">
+                    <i class="fas fa-check me-2"></i>
+                    Complete Sale
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Processing Modal -->
+<div class="modal fade" id="processingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mb-0">Processing sale...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/pos.js') }}"></script>
+<script>
+// Product data for JavaScript
+const products = {{ products | tojson }};
+const taxRate = {{ current_user.business.tax_rate or 0 }};
+
+// Initialize POS
+document.addEventListener('DOMContentLoaded', function() {
+    initializePOS();
+});
+</script>
+{% endblock %}

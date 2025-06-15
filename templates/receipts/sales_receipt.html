@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt - {{ sale.sale_number }}</title>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { margin: 0; }
+            .receipt { width: 80mm; font-size: 12px; }
+        }
+        
+        .receipt {
+            max-width: 350px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            background: white;
+            color: black;
+        }
+        
+        .receipt-header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .business-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .business-details {
+            font-size: 11px;
+            line-height: 1.2;
+        }
+        
+        .receipt-info {
+            margin-bottom: 15px;
+            font-size: 11px;
+        }
+        
+        .receipt-info div {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2px;
+        }
+        
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            font-size: 11px;
+        }
+        
+        .items-table th,
+        .items-table td {
+            padding: 3px;
+            border-bottom: 1px dashed #ccc;
+        }
+        
+        .items-table th {
+            font-weight: bold;
+            border-bottom: 2px solid #000;
+        }
+        
+        .totals {
+            border-top: 2px solid #000;
+            padding-top: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .totals div {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+            font-size: 12px;
+        }
+        
+        .total-amount {
+            font-weight: bold;
+            font-size: 14px;
+            border-top: 1px solid #000;
+            padding-top: 5px;
+        }
+        
+        .receipt-footer {
+            text-align: center;
+            border-top: 2px solid #000;
+            padding-top: 10px;
+            font-size: 10px;
+            line-height: 1.3;
+        }
+        
+        .payment-info {
+            background: #f8f9fa;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #dee2e6;
+            font-size: 11px;
+        }
+        
+        .qr-code {
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .print-controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        @media screen {
+            body {
+                background: #f8f9fa;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-controls no-print">
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Print Receipt
+        </button>
+        <button onclick="window.close()" class="btn btn-secondary">
+            <i class="fas fa-times"></i> Close
+        </button>
+    </div>
+
+    <div class="receipt">
+        <!-- Header -->
+        <div class="receipt-header">
+            {% if sale.business.logo_url %}
+            <div style="margin-bottom: 10px;">
+                <img src="{{ sale.business.logo_url }}" alt="Logo" style="max-height: 50px;">
+            </div>
+            {% endif %}
+            
+            <div class="business-name">{{ sale.business.name }}</div>
+            <div class="business-details">
+                {% if sale.business.address %}{{ sale.business.address }}<br>{% endif %}
+                {% if sale.business.phone %}Tel: {{ sale.business.phone }}<br>{% endif %}
+                {% if sale.business.email %}Email: {{ sale.business.email }}{% endif %}
+            </div>
+            
+            {% if sale.business.till_number %}
+            <div style="margin-top: 5px; font-weight: bold;">
+                Till No: {{ sale.business.till_number }}
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Receipt Information -->
+        <div class="receipt-info">
+            <div>
+                <span>Receipt No:</span>
+                <span>{{ sale.sale_number }}</span>
+            </div>
+            <div>
+                <span>Date:</span>
+                <span>{{ sale.sale_date.strftime('%d/%m/%Y %H:%M') }}</span>
+            </div>
+            <div>
+                <span>Cashier:</span>
+                <span>{{ sale.user.name }}</span>
+            </div>
+            {% if sale.customer %}
+            <div>
+                <span>Customer:</span>
+                <span>{{ sale.customer.name }}</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Items -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="text-align: left;">Item</th>
+                    <th style="text-align: center;">Qty</th>
+                    <th style="text-align: right;">Price</th>
+                    <th style="text-align: right;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in sale.items %}
+                <tr>
+                    <td>{{ item.product.name }}</td>
+                    <td style="text-align: center;">{{ item.quantity|int if item.quantity == item.quantity|int else item.quantity }}</td>
+                    <td style="text-align: right;">{{ "%.2f"|format(item.unit_price) }}</td>
+                    <td style="text-align: right;">{{ "%.2f"|format(item.total_price) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Totals -->
+        <div class="totals">
+            <div>
+                <span>Subtotal:</span>
+                <span>{{ sale.business.currency }} {{ "%.2f"|format(sale.subtotal) }}</span>
+            </div>
+            
+            {% if sale.discount_amount > 0 %}
+            <div>
+                <span>Discount:</span>
+                <span>-{{ sale.business.currency }} {{ "%.2f"|format(sale.discount_amount) }}</span>
+            </div>
+            {% endif %}
+            
+            {% if sale.tax_amount > 0 %}
+            <div>
+                <span>Tax ({{ "%.1f"|format(sale.business.tax_rate) }}%):</span>
+                <span>{{ sale.business.currency }} {{ "%.2f"|format(sale.tax_amount) }}</span>
+            </div>
+            {% endif %}
+            
+            <div class="total-amount">
+                <span>TOTAL:</span>
+                <span>{{ sale.business.currency }} {{ "%.2f"|format(sale.total_amount) }}</span>
+            </div>
+        </div>
+        
+        <!-- Payment Information -->
+        <div class="payment-info">
+            <div style="font-weight: bold; margin-bottom: 5px;">Payment Details:</div>
+            <div>
+                <span>Method:</span>
+                <span>{{ sale.payment_method.upper() }}</span>
+            </div>
+            {% if sale.mpesa_transaction_id %}
+            <div>
+                <span>M-Pesa Code:</span>
+                <span>{{ sale.mpesa_transaction_id }}</span>
+            </div>
+            {% endif %}
+            <div>
+                <span>Status:</span>
+                <span>{{ sale.payment_status.value.title() }}</span>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="receipt-footer">
+            <div style="font-weight: bold; margin-bottom: 5px;">
+                Thank you for your business!
+            </div>
+            
+            {% if sale.business.receipt_footer %}
+            <div style="margin-bottom: 10px;">
+                {{ sale.business.receipt_footer }}
+            </div>
+            {% endif %}
+            
+            <div>
+                Powered by Comolor POS<br>
+                www.comolor.com
+            </div>
+            
+            <div style="margin-top: 10px; font-size: 9px;">
+                Items sold are not returnable.<br>
+                Goods sold are not refundable.<br>
+                Thank you for choosing us.
+            </div>
+        </div>
+        
+        <!-- QR Code for digital receipt (optional) -->
+        <div class="qr-code">
+            <div style="font-size: 10px; margin-top: 15px;">
+                Digital Receipt: {{ request.url_root }}receipt/{{ sale.id }}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-print when page loads (optional)
+        // window.onload = function() { window.print(); }
+        
+        // Print function
+        function printReceipt() {
+            window.print();
+        }
+        
+        // Close window after printing
+        window.onafterprint = function() {
+            // Uncomment if you want to auto-close after printing
+            // window.close();
+        }
+    </script>
+</body>
+</html>

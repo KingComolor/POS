@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome - Comolor POS{% endblock %}
+
+{% block content %}
+<div class="hero-section bg-primary text-white py-5 mb-5">
+    <div class="container text-center">
+        <h1 class="display-4 mb-3">
+            <i class="fas fa-cash-register me-3"></i>
+            Welcome to Comolor POS
+        </h1>
+        <p class="lead">Professional Point of Sale System for Modern Businesses</p>
+        <div class="mt-4">
+            <a href="{{ url_for('register') }}" class="btn btn-light btn-lg me-3">
+                <i class="fas fa-user-plus me-2"></i>Get Started
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg">
+                <i class="fas fa-sign-in-alt me-2"></i>Login
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h2 class="text-center mb-5">Why Choose Comolor POS?</h2>
+            
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-mobile-alt fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title">M-Pesa Integration</h5>
+                            <p class="card-text">Seamless M-Pesa payments with automatic receipt generation and real-time transaction verification.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
+                            <h5 class="card-title">Advanced Analytics</h5>
+                            <p class="card-text">Comprehensive sales reports, inventory tracking, and business insights to help you grow.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-users fa-3x text-info mb-3"></i>
+                            <h5 class="card-title">Multi-User Support</h5>
+                            <p class="card-text">Role-based access control for business owners, managers, and cashiers with activity tracking.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-cloud fa-3x text-warning mb-3"></i>
+                            <h5 class="card-title">Cloud-Based</h5>
+                            <p class="card-text">Access your business data from anywhere with automatic backups and 99.9% uptime guarantee.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-5">
+        <div class="col-lg-10 mx-auto">
+            <div class="card bg-dark text-white">
+                <div class="card-body text-center py-5">
+                    <h3 class="mb-3">Ready to Transform Your Business?</h3>
+                    <p class="lead mb-4">Join thousands of businesses already using Comolor POS to streamline their operations and increase profits.</p>
+                    
+                    <div class="row g-3 justify-content-center">
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <i class="fas fa-calendar-alt fa-2x text-primary me-3"></i>
+                                <div>
+                                    <h5 class="mb-0">Monthly Plan</h5>
+                                    <p class="mb-0">KES 3,000/month</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <i class="fas fa-calendar fa-2x text-success me-3"></i>
+                                <div>
+                                    <h5 class="mb-0">Yearly Plan</h5>
+                                    <p class="mb-0">KES 30,000/year</p>
+                                    <small class="text-success">Save 2 months!</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-rocket me-2"></i>Start Your Free Trial
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

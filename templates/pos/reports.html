@@ -1,0 +1,467 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Comolor POS{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="fas fa-chart-bar me-2"></i>
+        Reports & Analytics
+    </h1>
+    <div class="btn-group" role="group">
+        <button class="btn btn-outline-primary" onclick="exportReport('pdf')">
+            <i class="fas fa-file-pdf me-1"></i>Export PDF
+        </button>
+        <button class="btn btn-outline-success" onclick="exportReport('excel')">
+            <i class="fas fa-file-excel me-1"></i>Export Excel
+        </button>
+    </div>
+</div>
+
+<!-- Date Range Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <label for="startDate" class="form-label">Start Date</label>
+                <input type="date" class="form-control" id="startDate" value="{{ (moment().subtract(30, 'days')).format('YYYY-MM-DD') }}">
+            </div>
+            <div class="col-md-3">
+                <label for="endDate" class="form-label">End Date</label>
+                <input type="date" class="form-control" id="endDate" value="{{ moment().format('YYYY-MM-DD') }}">
+            </div>
+            <div class="col-md-3">
+                <label for="reportType" class="form-label">Report Type</label>
+                <select class="form-select" id="reportType">
+                    <option value="sales">Sales Report</option>
+                    <option value="products">Product Report</option>
+                    <option value="customers">Customer Report</option>
+                    <option value="staff">Staff Report</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <button class="btn btn-primary w-100" onclick="generateReport()">
+                    <i class="fas fa-search me-2"></i>Generate Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Key Metrics -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1" id="totalSales">0</h3>
+                        <p class="mb-0">Total Sales</p>
+                    </div>
+                    <i class="fas fa-shopping-cart fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1" id="totalRevenue">KES 0</h3>
+                        <p class="mb-0">Total Revenue</p>
+                    </div>
+                    <i class="fas fa-money-bill fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1" id="avgSale">KES 0</h3>
+                        <p class="mb-0">Average Sale</p>
+                    </div>
+                    <i class="fas fa-chart-line fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1" id="totalProfit">KES 0</h3>
+                        <p class="mb-0">Total Profit</p>
+                    </div>
+                    <i class="fas fa-chart-pie fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Sales Trend
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="salesChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Payment Methods
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="paymentChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Reports -->
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-trophy me-2"></i>
+                    Top Selling Products
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Sold</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topProductsTable">
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-star me-2"></i>
+                    Top Customers
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Orders</th>
+                                <th>Spent</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topCustomersTable">
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Staff Performance -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-users me-2"></i>
+                    Staff Performance
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Staff Member</th>
+                                <th>Sales Count</th>
+                                <th>Total Revenue</th>
+                                <th>Average Sale</th>
+                                <th>Performance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="staffPerformanceTable">
+                            <tr>
+                                <td>{{ current_user.name }}</td>
+                                <td>45</td>
+                                <td>KES 125,400</td>
+                                <td>KES 2,787</td>
+                                <td>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: 85%">85%</div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    Recent Sales Activity
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Sale #</th>
+                                <th>Customer</th>
+                                <th>Staff</th>
+                                <th>Amount</th>
+                                <th>Payment</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentSalesTable">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">Loading recent sales...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+<script>
+window.moment = moment;
+
+// Chart instances
+let salesChart, paymentChart;
+
+// Initialize charts
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCharts();
+    generateReport();
+});
+
+function initializeCharts() {
+    // Sales Trend Chart
+    const salesCtx = document.getElementById('salesChart').getContext('2d');
+    salesChart = new Chart(salesCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Daily Sales',
+                data: [],
+                borderColor: 'rgb(54, 162, 235)',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'KES ' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Payment Methods Chart
+    const paymentCtx = document.getElementById('paymentChart').getContext('2d');
+    paymentChart = new Chart(paymentCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['M-Pesa', 'Cash'],
+            datasets: [{
+                data: [60, 40],
+                backgroundColor: [
+                    'rgb(34, 197, 94)',
+                    'rgb(156, 163, 175)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function generateReport() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    const reportType = document.getElementById('reportType').value;
+    
+    // Show loading state
+    showLoading(true);
+    
+    // Fetch report data
+    fetch('/pos/reports/data', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            start_date: startDate,
+            end_date: endDate,
+            report_type: reportType
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        updateMetrics(data.metrics);
+        updateCharts(data.charts);
+        updateTables(data.tables);
+        showLoading(false);
+    })
+    .catch(error => {
+        console.error('Error generating report:', error);
+        showLoading(false);
+    });
+}
+
+function updateMetrics(metrics) {
+    document.getElementById('totalSales').textContent = metrics.total_sales || 0;
+    document.getElementById('totalRevenue').textContent = 'KES ' + (metrics.total_revenue || 0).toLocaleString();
+    document.getElementById('avgSale').textContent = 'KES ' + (metrics.avg_sale || 0).toLocaleString();
+    document.getElementById('totalProfit').textContent = 'KES ' + (metrics.total_profit || 0).toLocaleString();
+}
+
+function updateCharts(charts) {
+    // Update sales chart
+    if (charts.sales_trend) {
+        salesChart.data.labels = charts.sales_trend.labels;
+        salesChart.data.datasets[0].data = charts.sales_trend.data;
+        salesChart.update();
+    }
+    
+    // Update payment methods chart
+    if (charts.payment_methods) {
+        paymentChart.data.datasets[0].data = charts.payment_methods.data;
+        paymentChart.update();
+    }
+}
+
+function updateTables(tables) {
+    // Update top products table
+    if (tables.top_products) {
+        updateTable('topProductsTable', tables.top_products, ['name', 'quantity_sold', 'revenue']);
+    }
+    
+    // Update top customers table
+    if (tables.top_customers) {
+        updateTable('topCustomersTable', tables.top_customers, ['name', 'order_count', 'total_spent']);
+    }
+    
+    // Update recent sales table
+    if (tables.recent_sales) {
+        updateTable('recentSalesTable', tables.recent_sales, ['sale_number', 'customer', 'staff', 'amount', 'payment_method', 'date']);
+    }
+}
+
+function updateTable(tableId, data, columns) {
+    const tbody = document.getElementById(tableId);
+    tbody.innerHTML = '';
+    
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="' + columns.length + '" class="text-center text-muted">No data available</td></tr>';
+        return;
+    }
+    
+    data.forEach(row => {
+        const tr = document.createElement('tr');
+        columns.forEach(col => {
+            const td = document.createElement('td');
+            td.textContent = row[col] || 'N/A';
+            tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+    });
+}
+
+function showLoading(show) {
+    const tables = ['topProductsTable', 'topCustomersTable', 'recentSalesTable'];
+    tables.forEach(tableId => {
+        const tbody = document.getElementById(tableId);
+        if (show) {
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Loading...</td></tr>';
+        }
+    });
+}
+
+function exportReport(format) {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    const reportType = document.getElementById('reportType').value;
+    
+    const url = `/pos/reports/export?format=${format}&start_date=${startDate}&end_date=${endDate}&type=${reportType}`;
+    window.open(url, '_blank');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>License Expiry Warning - Comolor POS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 0;
+        }
+        .header {
+            background: linear-gradient(135deg, #fd7e14 0%, #dc6500 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .warning-icon {
+            font-size: 48px;
+            color: #ffc107;
+            margin-bottom: 15px;
+        }
+        .license-info {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .license-info table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .license-info td {
+            padding: 8px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .license-info td:first-child {
+            font-weight: bold;
+            width: 40%;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #dc3545;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 20px 0;
+            font-size: 16px;
+        }
+        .renewal-options {
+            background-color: #e7f3ff;
+            border: 1px solid #b6d7ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .plan-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .plan-price {
+            font-size: 20px;
+            font-weight: bold;
+            color: #198754;
+        }
+        .footer {
+            background-color: #343a40;
+            color: #adb5bd;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #6ea8fe;
+        }
+        .consequences {
+            background-color: #f8d7da;
+            border: 1px solid #f5c2c7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .benefits {
+            background-color: #d1ecf1;
+            border: 1px solid #b6d7ff;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>⚠️ License Expiry Warning</h1>
+            <p>Your Comolor POS license is expiring soon</p>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            <div class="warning-box">
+                <div class="warning-icon">⚠️</div>
+                <h2 style="margin: 0; color: #dc6500;">Action Required</h2>
+                <p style="font-size: 18px; margin: 10px 0;">
+                    Your Comolor POS license expires in <strong>{{ days_remaining }} day{{ 's' if days_remaining != 1 else '' }}</strong>
+                </p>
+            </div>
+            
+            <p>Dear {{ user.name }},</p>
+            
+            <p>This is an important reminder that your Comolor POS license for <strong>{{ business.name }}</strong> is set to expire soon. To ensure uninterrupted service, please renew your license before the expiration date.</p>
+            
+            <!-- License Information -->
+            <div class="license-info">
+                <h3>📋 Current License Details</h3>
+                <table>
+                    <tr>
+                        <td>Business Name:</td>
+                        <td>{{ business.name }}</td>
+                    </tr>
+                    <tr>
+                        <td>Current Plan:</td>
+                        <td>{{ business.subscription_plan.title() }} Plan</td>
+                    </tr>
+                    <tr>
+                        <td>Expiry Date:</td>
+                        <td>{{ business.license_expires_at.strftime('%B %d, %Y at %I:%M %p') }}</td>
+                    </tr>
+                    <tr>
+                        <td>Days Remaining:</td>
+                        <td><strong style="color: {% if days_remaining <= 1 %}#dc3545{% elif days_remaining <= 3 %}#fd7e14{% else %}#ffc107{% endif %};">{{ days_remaining }} day{{ 's' if days_remaining != 1 else '' }}</strong></td>
+                    </tr>
+                </table>
+            </div>
+            
+            <!-- What happens if you don't renew -->
+            <div class="consequences">
+                <h3>🚫 What Happens After Expiry?</h3>
+                <ul style="margin: 10px 0;">
+                    <li>Your POS system will be temporarily suspended</li>
+                    <li>You won't be able to process new sales</li>
+                    <li>Access to inventory management will be restricted</li>
+                    <li>Sales reports and analytics will be unavailable</li>
+                    <li>Staff accounts will be deactivated</li>
+                </ul>
+                <p><strong>Note:</strong> Your data remains safe and will be restored when you renew.</p>
+            </div>
+            
+            <!-- Renewal Options -->
+            <div class="renewal-options">
+                <h3>💳 Renewal Options</h3>
+                <p>Choose the plan that works best for your business:</p>
+                
+                <div class="plan-option">
+                    <div>
+                        <strong>Monthly Plan</strong><br>
+                        <small>Perfect for small businesses</small>
+                    </div>
+                    <div class="plan-price">KES 3,000</div>
+                </div>
+                
+                <div class="plan-option">
+                    <div>
+                        <strong>Yearly Plan</strong><br>
+                        <small>Save KES 6,000 (2 months free!)</small>
+                    </div>
+                    <div class="plan-price">KES 30,000</div>
+                </div>
+            </div>
+            
+            <!-- Benefits of Renewal -->
+            <div class="benefits">
+                <h3>✨ Why Renew Now?</h3>
+                <ul style="margin: 10px 0;">
+                    <li><strong>Uninterrupted Service:</strong> Keep serving your customers without disruption</li>
+                    <li><strong>All Features Unlocked:</strong> Continue using all POS features and M-Pesa integration</li>
+                    <li><strong>Data Security:</strong> Your business data remains secure and backed up</li>
+                    <li><strong>Priority Support:</strong> Get help when you need it most</li>
+                    <li><strong>Regular Updates:</strong> Access to new features and improvements</li>
+                </ul>
+            </div>
+            
+            <!-- Call to Action -->
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{ request.url_root }}license/payment" class="cta-button">
+                    🔄 Renew License Now
+                </a>
+                <p style="margin-top: 15px; font-size: 14px; color: #6c757d;">
+                    Renewal takes less than 2 minutes with M-Pesa
+                </p>
+            </div>
+            
+            <!-- Payment Instructions -->
+            <div style="background-color: #f0f9ff; padding: 20px; border-radius: 5px; margin: 20px 0;">
+                <h3>📱 Easy M-Pesa Renewal Process</h3>
+                <ol style="margin: 10px 0;">
+                    <li>Click the "Renew License Now" button above</li>
+                    <li>Select your preferred plan (Monthly or Yearly)</li>
+                    <li>Enter your M-Pesa phone number</li>
+                    <li>Complete payment using the STK push on your phone</li>
+                    <li>Your license will be activated automatically</li>
+                </ol>
+            </div>
+            
+            <!-- Support Information -->
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
+                <h3>💬 Need Help with Renewal?</h3>
+                <p>Our support team is ready to assist you:</p>
+                <ul style="margin: 10px 0;">
+                    <li><strong>Email:</strong> <a href="mailto:support@comolor.com">support@comolor.com</a></li>
+                    <li><strong>Phone:</strong> +254 700 000 000</li>
+                    <li><strong>WhatsApp:</strong> +254 700 000 000</li>
+                    <li><strong>Working Hours:</strong> Monday - Friday, 8 AM - 6 PM (GMT+3)</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Comolor POS</strong> - Professional Point of Sale System</p>
+            <p>
+                <a href="{{ request.url_root }}about">About Us</a> | 
+                <a href="{{ request.url_root }}terms">Terms of Service</a> | 
+                <a href="{{ request.url_root }}privacy">Privacy Policy</a>
+            </p>
+            <p>&copy; {{ moment().format('YYYY') }} Comolor POS. All rights reserved.</p>
+            <p style="font-size: 12px; margin-top: 10px;">
+                This email was sent to {{ user.email }} for business "{{ business.name }}".
+            </p>
+        </div>
+    </div>
+</body>
+</html>
