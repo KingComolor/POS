@@ -3,42 +3,232 @@
 {% block title %}Super Admin Dashboard - Comolor POS{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>
-        <i class="fas fa-crown me-2 text-warning"></i>
-        Super Admin Dashboard
-    </h1>
-    <div class="text-muted">
-        <i class="fas fa-clock me-1"></i>
-        June 15, 2025
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <span class="text-warning">👑</span>
+            Super Admin Dashboard
+        </h1>
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+                System Controls
+            </button>
+            <div class="dropdown-menu dropdown-menu-right">
+                <h6 class="dropdown-header">Business Management</h6>
+                <a class="dropdown-item" href="{{ url_for('manage_businesses') }}">
+                    <i class="fas fa-building"></i> View All Businesses
+                </a>
+                <a class="dropdown-item" href="{{ url_for('manage_licenses') }}">
+                    <i class="fas fa-key"></i> License Management
+                </a>
+                <div class="dropdown-divider"></div>
+                <h6 class="dropdown-header">System Control</h6>
+                <a class="dropdown-item" href="{{ url_for('manage_users') }}">
+                    <i class="fas fa-users"></i> User Management
+                </a>
+                <a class="dropdown-item" href="{{ url_for('system_notifications') }}">
+                    <i class="fas fa-bell"></i> System Notifications
+                </a>
+                <a class="dropdown-item" href="{{ url_for('broadcast_message') }}">
+                    <i class="fas fa-bullhorn"></i> Send Broadcast
+                </a>
+                <div class="dropdown-divider"></div>
+                <h6 class="dropdown-header">Reports & Data</h6>
+                <a class="dropdown-item" href="{{ url_for('view_reports') }}">
+                    <i class="fas fa-chart-bar"></i> Advanced Reports
+                </a>
+                <a class="dropdown-item" href="{{ url_for('export_businesses') }}">
+                    <i class="fas fa-download"></i> Export Business Data
+                </a>
+                <a class="dropdown-item" href="{{ url_for('system_settings') }}">
+                    <i class="fas fa-cog"></i> System Settings
+                </a>
+            </div>
+        </div>
     </div>
-</div>
 
-<!-- Statistics Cards -->
-<div class="row g-4 mb-5">
-    <div class="col-md-3">
-        <div class="card bg-primary text-white">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="flex-grow-1">
-                        <h3 class="mb-1">{{ total_businesses }}</h3>
-                        <p class="mb-0">Total Businesses</p>
+    <!-- Alert for Pending Businesses -->
+    {% if pending_businesses > 0 %}
+    <div class="alert alert-warning alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert">
+            <span>&times;</span>
+        </button>
+        <strong>⚠️ Action Required:</strong> {{ pending_businesses }} business{{ 'es' if pending_businesses > 1 else '' }} pending approval.
+        <a href="{{ url_for('manage_businesses') }}?status=pending" class="alert-link">Review now →</a>
+    </div>
+    {% endif %}
+
+    <!-- Enhanced Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center border-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="text-primary mb-0">{{ total_businesses }}</h3>
+                            <p class="mb-0">Total Businesses</p>
+                        </div>
+                        <div class="text-primary" style="font-size: 2rem;">🏢</div>
                     </div>
-                    <i class="fas fa-building fa-2x opacity-75"></i>
+                </div>
+                <div class="card-footer bg-primary text-white">
+                    <a href="{{ url_for('manage_businesses') }}" class="text-white text-decoration-none">
+                        View All <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    
+        <div class="col-md-3">
+            <div class="card text-center border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="text-success mb-0">{{ active_businesses }}</h3>
+                            <p class="mb-0">Active Licenses</p>
+                        </div>
+                        <div class="text-success" style="font-size: 2rem;">✅</div>
+                    </div>
+                </div>
+                <div class="card-footer bg-success text-white">
+                    <a href="{{ url_for('manage_licenses') }}" class="text-white text-decoration-none">
+                        Manage <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="text-warning mb-0">{{ pending_businesses }}</h3>
+                            <p class="mb-0">Pending Approvals</p>
+                        </div>
+                        <div class="text-warning" style="font-size: 2rem;">⏳</div>
+                    </div>
+                </div>
+                <div class="card-footer bg-warning text-dark">
+                    <a href="{{ url_for('manage_businesses') }}?status=pending" class="text-dark text-decoration-none">
+                        Review <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="text-info mb-0">{{ "{:,.0f}".format(total_revenue) }}</h3>
+                            <p class="mb-0">License Revenue (KES)</p>
+                        </div>
+                        <div class="text-info" style="font-size: 2rem;">💰</div>
+                    </div>
+                </div>
+                <div class="card-footer bg-info text-white">
+                    <a href="{{ url_for('view_reports') }}" class="text-white text-decoration-none">
+                        Reports <i class="fas fa-arrow-right"></i>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
-    
-    <div class="col-md-3">
-        <div class="card bg-success text-white">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="flex-grow-1">
-                        <h3 class="mb-1">{{ active_businesses }}</h3>
-                        <p class="mb-0">Active Licenses</p>
+
+    <!-- Super Admin Feature Showcase -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5><i class="fas fa-crown"></i> Super Admin Control Center - All Features Available</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6 class="text-primary"><i class="fas fa-building"></i> Business Management</h6>
+                            <div class="list-group list-group-flush">
+                                <a href="{{ url_for('manage_businesses') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    View All Businesses
+                                    <span class="badge badge-primary">{{ total_businesses }}</span>
+                                </a>
+                                <a href="{{ url_for('manage_businesses') }}?status=pending" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    Pending Approvals
+                                    <span class="badge badge-warning">{{ pending_businesses }}</span>
+                                </a>
+                                <a href="{{ url_for('manage_licenses') }}" class="list-group-item list-group-item-action">
+                                    License Management & Bulk Operations
+                                </a>
+                                <small class="text-muted px-3">✓ Business deletion with data cleanup</small>
+                                <small class="text-muted px-3">✓ Password reset for business users</small>
+                                <small class="text-muted px-3">✓ Detailed business statistics</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-success"><i class="fas fa-users"></i> User & System Control</h6>
+                            <div class="list-group list-group-flush">
+                                <a href="{{ url_for('manage_users') }}" class="list-group-item list-group-item-action">
+                                    Advanced User Management
+                                </a>
+                                <a href="{{ url_for('system_notifications') }}" class="list-group-item list-group-item-action">
+                                    System Notifications Center
+                                </a>
+                                <a href="{{ url_for('broadcast_message') }}" class="list-group-item list-group-item-action">
+                                    Broadcast Messages to Businesses
+                                </a>
+                                <small class="text-muted px-3">✓ Role-based user filtering</small>
+                                <small class="text-muted px-3">✓ Real-time system alerts</small>
+                                <small class="text-muted px-3">✓ License expiry warnings</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-info"><i class="fas fa-cog"></i> Reports & Configuration</h6>
+                            <div class="list-group list-group-flush">
+                                <a href="{{ url_for('view_reports') }}" class="list-group-item list-group-item-action">
+                                    Advanced Analytics & Reports
+                                </a>
+                                <a href="{{ url_for('export_businesses') }}" class="list-group-item list-group-item-action">
+                                    Export Business Data (CSV)
+                                </a>
+                                <a href="{{ url_for('export_payments') }}" class="list-group-item list-group-item-action">
+                                    Export Payment Data (CSV)
+                                </a>
+                                <a href="{{ url_for('system_settings') }}" class="list-group-item list-group-item-action">
+                                    Global System Settings
+                                </a>
+                                <small class="text-muted px-3">✓ M-Pesa configuration</small>
+                                <small class="text-muted px-3">✓ Licensing price management</small>
+                            </div>
+                        </div>
                     </div>
-                    <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Features Summary -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="alert alert-success">
+                <h5><i class="fas fa-check-circle"></i> Complete Super Admin Implementation</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Business Operations:</strong></p>
+                        <ul class="mb-0">
+                            <li>Complete business lifecycle management</li>
+                            <li>License tracking with expiry automation</li>
+                            <li>Bulk license extension capabilities</li>
+                            <li>Business deletion with full data cleanup</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>System Administration:</strong></p>
+                        <ul class="mb-0">
+                            <li>Advanced user management with role filtering</li>
+                            <li>System-wide notification center</li>
+                            <li>Broadcast messaging to all businesses</li>
+                            <li>Comprehensive data export functionality</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
