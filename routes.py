@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import secrets
 import logging
 
-from app import app, db, mail
+from app import app, db
 from models import (User, Business, Product, Customer, Sale, SaleItem, Payment, 
                    StockMovement, ActivityLog, UserRole, BusinessStatus, PaymentStatus)
 from auth import require_role, log_activity
@@ -537,6 +537,203 @@ def privacy():
 @app.route('/about')
 def about():
     return render_template('legal/about.html')
+
+# API Endpoints for Dashboard AJAX calls
+@app.route('/api/dashboard/stats')
+@login_required
+def api_dashboard_stats():
+    try:
+        if not current_user.business:
+            return jsonify({'success': False, 'message': 'No business associated'})
+        
+        business = current_user.business
+        today = datetime.utcnow().date()
+        
+        # Get today's sales
+        today_sales = Sale.query.filter(
+            Sale.business_id == business.id,
+            Sale.sale_date >= today,
+            Sale.payment_status == PaymentStatus.COMPLETED
+        ).count()
+        
+        today_revenue = db.session.query(db.func.sum(Sale.total_amount)).filter(
+            Sale.business_id == business.id,
+            Sale.sale_date >= today,
+            Sale.payment_status == PaymentStatus.COMPLETED
+        ).scalar() or 0
+        
+        total_products = Product.query.filter_by(business_id=business.id, is_active=True).count()
+        low_stock_products = Product.query.filter(
+            Product.business_id == business.id,
+            Product.is_active == True,
+            Product.stock_quantity <= Product.min_stock_level
+        ).count()
+        
+        total_customers = Customer.query.filter_by(business_id=business.id).count()
+        active_staff = User.query.filter_by(business_id=business.id, is_active=True).count()
+        
+        stats = {
+            'today_sales': today_sales,
+            'today_revenue': float(today_revenue),
+            'total_products': total_products,
+            'low_stock_products': low_stock_products,
+            'total_customers': total_customers,
+            'active_staff': active_staff
+        }
+        
+        return jsonify({'success': True, 'data': stats})
+    except Exception as e:
+        logging.error(f"Dashboard stats error: {str(e)}")
+        return jsonify({'success': False, 'message': 'Failed to fetch stats'})
+
+@app.route('/api/dashboard/charts')
+@login_required
+def api_dashboard_charts():
+    try:
+        if not current_user.business:
+            return jsonify({'success': False, 'message': 'No business associated'})
+        
+        business = current_user.business
+        
+        # Sales trend for last 7 days
+        sales_data = []
+        labels = []
+        for i in range(6, -1, -1):
+            date = datetime.utcnow().date() - timedelta(days=i)
+            sales = db.session.query(db.func.sum(Sale.total_amount)).filter(
+                Sale.business_id == business.id,
+                Sale.sale_date >= date,
+                Sale.sale_date < date + timedelta(days=1),
+                Sale.payment_status == PaymentStatus.COMPLETED
+            ).scalar() or 0
+            sales_data.append(float(sales))
+            labels.append(date.strftime('%m/%d'))
+        
+        # Payment methods distribution
+        mpesa_sales = db.session.query(db.func.sum(Sale.total_amount)).filter(
+            Sale.business_id == business.id,
+            Sale.payment_method == 'mpesa',
+            Sale.payment_status == PaymentStatus.COMPLETED
+        ).scalar() or 0
+        
+        cash_sales = db.session.query(db.func.sum(Sale.total_amount)).filter(
+            Sale.business_id == business.id,
+            Sale.payment_method == 'cash',
+            Sale.payment_status == PaymentStatus.COMPLETED
+        ).scalar() or 0
+        
+        # Top products
+        top_products = db.session.query(
+            Product.name,
+            db.func.sum(SaleItem.quantity).label('total_sold')
+        ).join(SaleItem).join(Sale).filter(
+            Sale.business_id == business.id,
+            Sale.payment_status == PaymentStatus.COMPLETED
+        ).group_by(Product.id, Product.name).order_by(
+            db.func.sum(SaleItem.quantity).desc()
+        ).limit(5).all()
+        
+        chart_data = {
+            'sales_trend': {
+                'labels': labels,
+                'data': sales_data
+            },
+            'payment_methods': {
+                'data': [float(mpesa_sales), float(cash_sales)]
+            },
+            'top_products': {
+                'labels': [p.name for p in top_products],
+                'data': [float(p.total_sold) for p in top_products]
+            }
+        }
+        
+        return jsonify({'success': True, 'data': chart_data})
+    except Exception as e:
+        logging.error(f"Dashboard charts error: {str(e)}")
+        return jsonify({'success': False, 'message': 'Failed to fetch chart data'})
+
+@app.route('/api/dashboard/recent-activity')
+@login_required
+def api_dashboard_recent_activity():
+    try:
+        if not current_user.business:
+            return jsonify({'success': False, 'message': 'No business associated'})
+        
+        business = current_user.business
+        
+        # Get recent activities
+        activities = ActivityLog.query.filter_by(
+            business_id=business.id
+        ).order_by(ActivityLog.created_at.desc()).limit(10).all()
+        
+        activity_list = []
+        for activity in activities:
+            activity_data = {
+                'type': activity.action.lower().replace(' ', '_'),
+                'title': activity.details or activity.action,
+                'created_at': activity.created_at.isoformat(),
+                'amount': None
+            }
+            
+            # Add amount for sales activities
+            if 'sale' in activity.action.lower():
+                sale_id = activity.details.split(' ')[-1] if activity.details else None
+                if sale_id:
+                    try:
+                        sale = Sale.query.get(int(sale_id))
+                        if sale:
+                            activity_data['amount'] = float(sale.total_amount)
+                    except (ValueError, TypeError):
+                        pass
+            
+            activity_list.append(activity_data)
+        
+        return jsonify({'success': True, 'data': activity_list})
+    except Exception as e:
+        logging.error(f"Dashboard recent activity error: {str(e)}")
+        return jsonify({'success': False, 'message': 'Failed to fetch recent activity'})
+
+@app.route('/api/dashboard/notifications')
+@login_required
+def api_dashboard_notifications():
+    try:
+        notifications = []
+        
+        if current_user.business:
+            business = current_user.business
+            
+            # Check license expiry
+            if business.license_expires_at:
+                days_remaining = business.days_until_expiry()
+                if days_remaining <= 5:
+                    notifications.append({
+                        'id': f'license_expiry_{business.id}',
+                        'title': 'License Expiring Soon' if days_remaining > 0 else 'License Expired',
+                        'message': f'Your license expires in {days_remaining} days' if days_remaining > 0 else 'Your license has expired',
+                        'type': 'warning' if days_remaining > 0 else 'error',
+                        'duration': 10000
+                    })
+            
+            # Check low stock products
+            low_stock_count = Product.query.filter(
+                Product.business_id == business.id,
+                Product.is_active == True,
+                Product.stock_quantity <= Product.min_stock_level
+            ).count()
+            
+            if low_stock_count > 0:
+                notifications.append({
+                    'id': f'low_stock_{business.id}',
+                    'title': 'Low Stock Alert',
+                    'message': f'{low_stock_count} products are running low on stock',
+                    'type': 'warning',
+                    'duration': 5000
+                })
+        
+        return jsonify({'success': True, 'data': notifications})
+    except Exception as e:
+        logging.error(f"Dashboard notifications error: {str(e)}")
+        return jsonify({'success': False, 'message': 'Failed to fetch notifications'})
 
 # Error handlers
 @app.errorhandler(404)
