@@ -1,0 +1,161 @@
+Build a fully functional web-based Point of Sale (POS) system called Comolor POS, using Python Flask for the backend, PostgreSQL for the database, and HTML/CSS/JavaScript for the frontend. It should include user registration, login, role-based access, business licensing, M-Pesa till integration for payments and receipts, and automatic subscription locking.
+
+🏗️ Core System Features:
+1. Multi-Tenant Architecture (PostgreSQL)
+Each business/client has its own data scope (tenancy) within the same database.
+
+Use business_id in all relevant tables to isolate client data.
+
+Support dynamic schema OR business-aware models.
+
+Superadmin can access and manage all tenants from a master dashboard.
+
+2. Authentication & Registration
+Register: Name, Business Name, Email, Password, Business Type
+
+Must accept Terms and Conditions before registration
+
+Store hashed passwords securely
+
+Login: Email + password
+
+Option to reset password (email-based)
+
+3. User Roles & Access
+Super Admin
+
+Approve businesses
+
+Suspend/disable accounts
+
+View payments from all users
+
+Access all business dashboards
+
+Change subscription plans, lock unpaid users
+
+View analytics and logs
+
+Business Owner/Admin
+
+Full access to all modules for their business
+
+Can manage users/staff under their business
+
+Cashier/Employee
+
+Restricted access (sales, customers, stock view only)
+
+💳 Licensing & M-Pesa Till Integration
+4. License Activation Flow
+System must verify M-Pesa payment to a developer-owned Till Number (e.g., 30,000 KES yearly or 3,000 KES monthly).
+
+Once confirmed, activate the account.
+
+Save expiry date in DB; show remaining days on dashboard.
+
+5. License Expiry
+Auto-lock access after expiry (Scheduler/CRON).
+
+Notify 5 days before expiry via email/banner.
+
+Option to renew with another M-Pesa payment.
+
+6. M-Pesa Receipts for Business Sales
+Every business has a unique M-Pesa paybill/till number saved in settings.
+
+System fetches transactions (via Daraja API or webhook).
+
+Confirms payment, updates POS, and prints receipt automatically.
+
+📦 POS Modules (for Business Owner & Staff)
+7. Sales Module
+New sale: select items, quantity, discount
+
+Accept M-Pesa/Cash
+
+Auto-generate receipt (printable & downloadable)
+
+Save daily totals
+
+Link to customer (optional)
+
+8. Products & Inventory
+Add/edit/remove products
+
+Set cost price, selling price, stock level
+
+Inventory alerts for low stock
+
+Track stock movement by date/user
+
+9. Customers
+Add/edit customer info
+
+View customer purchase history
+
+Track debts or credits (if credit sales allowed)
+
+10. Staff Management
+Add/edit/delete employees
+
+Assign roles
+
+Monitor staff sales & activity logs
+
+11. Business Settings
+Change business logo, till number, currency
+
+Set taxes (optional)
+
+Export data (CSV/PDF)
+
+📊 Reports & Analytics
+12. Reports Dashboard
+Sales by day/week/month
+
+Top-selling products
+
+Sales per employee
+
+Profit calculations (Cost vs Sale)
+
+Export all reports
+
+🔐 Security & Access Control
+13. Authentication Security
+Use session-based or JWT authentication
+
+Block repeated failed logins
+
+Log all user activities
+
+14. Multi-user Isolation
+Users from one business can’t access another’s data
+
+Superadmin is the only one with global visibility
+
+🌍 Hosting & Deployment
+15. Deployment Setup
+Must be deployable to Render.com using PostgreSQL add-on
+
+Use DATABASE_URL from Render as the environment variable
+
+Set up .env for secret keys and till number
+
+📄 Extra Pages
+16. Legal & Terms
+Terms and Conditions page (must agree to before registration)
+
+Privacy Policy page
+
+“About Comolor POS” page
+
+🧪 Developer Tools
+17. Error Checking & Debugging
+Log missing files, broken routes, and failed DB connections
+
+Add debug mode flag in settings
+
+Superadmin panel to view system logs
+
