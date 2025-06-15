@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, flash, session, jsonify, make_response
+from flask import render_template, request, redirect, url_for, flash, session, jsonify, make_response, send_file
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash
 from datetime import datetime, timedelta
@@ -215,6 +215,256 @@ def super_admin_dashboard():
                          total_revenue=total_revenue,
                          recent_payments=recent_payments,
                          recent_businesses=recent_businesses)
+
+# Super Admin - Manage Businesses
+@app.route('/admin/businesses')
+@login_required
+@require_role(UserRole.SUPER_ADMIN)
+def manage_businesses():
+    page = request.args.get('page', 1, type=int)
+    status_filter = request.args.get('status', '')
+    search = request.args.get('search', '')
+    
+    query = Business.query
+    
+    if status_filter:
+        query = query.filter(Business.status == BusinessStatus(status_filter))
+    
+    if search:
+        query = query.filter(Business.name.ilike(f'%{search}%'))
+    
+    businesses = query.order_by(Business.created_at.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+    
+    return render_template('admin/manage_businesses.html', businesses=businesses, 
+                         status_filter=status_filter, search=search)
+
+@app.route('/admin/businesses/<int:business_id>/toggle-status', methods=['POST'])
+@login_required
+@require_role(UserRole.SUPER_ADMIN)
+def toggle_business_status(business_id):
+    business = Business.query.get_or_404(business_id)
+    
+    if business.status == BusinessStatus.ACTIVE:
+        business.status = BusinessStatus.SUSPENDED
+        message = f"Business {business.name} has been suspended"
+    elif business.status == BusinessStatus.SUSPENDED:
+        business.status = BusinessStatus.ACTIVE
+        message = f"Business {business.name} has been activated"
+    elif business.status == BusinessStatus.PENDING:
+        business.status = BusinessStatus.ACTIVE
+        business.license_expires_at = datetime.utcnow() + timedelta(days=30)
+        message = f"Business {business.name} has been approved and activated"
+    
+    db.session.commit()
+    log_activity(business.id, current_user.id, 'business_status_changed', 
+                f'Status changed to {business.status.value}', request)
+    
+    flash(message, 'success')
+    return redirect(url_for('manage_businesses'))
+
+@app.route('/admin/businesses/<int:business_id>/extend-license', methods=['POST'])
+@login_required
+@require_role(UserRole.SUPER_ADMIN)
+def extend_business_license(business_id):
+    business = Business.query.get_or_404(business_id)
+    days = request.form.get('days', 30, type=int)
+    
+    if business.license_expires_at:
+        business.license_expires_at = business.license_expires_at + timedelta(days=days)
+    else:
+        business.license_expires_at = datetime.utcnow() + timedelta(days=days)
+    
+    business.status = BusinessStatus.ACTIVE
+    db.session.commit()
+    
+    log_activity(business.id, current_user.id, 'license_extended', 
+                f'License extended by {days} days', request)
+    
+    flash(f'License extended by {days} days for {business.name}', 'success')
+    return redirect(url_for('manage_businesses'))
+
+# Super Admin - Export Data
+@app.route('/admin/export')
+@login_required
+@require_role(UserRole.SUPER_ADMIN)
+def export_data():
+    return render_template('admin/export_data.html')
+
+@app.route('/admin/export/businesses')
+@login_required
+@require_role(UserRole.SUPER_ADMIN)
+def export_businesses():
+    import csv
+    from io import StringIO
+    
+    output = StringIO()
+    writer = csv.writer(output)
+    
+    # Write header
+    writer.writerow(['ID', 'Name', 'Type', 'Email', 'Phone', 'Status', 'License Expires', 'Created At'])
+    
+    # Write data
+    businesses = Business.query.all()
+    for business in businesses:
+        writer.writerow([
+            business.id,
+            business.name,
+            business.business_type,
+            business.email,
+            business.phone,
+            business.status.value,
+            business.license_expires_at.strftime('%Y-%m-%d') if business.license_expires_at else '',
+            business.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        ])
+    
+    output.seek(0)
+    return send_file(
+        StringIO(output.getvalue()),
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name=f'businesses_export_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}.csv'
+    )
+
+@app.route('/admin/export/payments')
+@login_required
+@require_role(UserRole.SUPER_ADMIN)
+def export_payments():
+    import csv
+    from io import StringIO
+    
+    output = StringIO()
+    writer = csv.writer(output)
+    
+    # Write header
+    writer.writerow(['ID', 'Business', 'Amount', 'Type', 'Status', 'Phone', 'Transaction ID', 'Created At'])
+    
+    # Write data
+    payments = Payment.query.join(Business).all()
+    for payment in payments:
+        writer.writerow([
+            payment.id,
+            payment.business.name if payment.business else 'N/A',
+            payment.amount,
+            payment.payment_type,
+            payment.status.value,
+            payment.phone_number,
+            payment.mpesa_transaction_id or '',
+            payment.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        ])
+    
+    output.seek(0)
+    return send_file(
+        StringIO(output.getvalue()),
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name=f'payments_export_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}.csv'
+    )
+
+# Super Admin - System Settings
+@app.route('/admin/settings')
+@login_required
+@require_role(UserRole.SUPER_ADMIN)
+def system_settings():
+    # Get system statistics
+    stats = {
+        'total_businesses': Business.query.count(),
+        'active_businesses': Business.query.filter_by(status=BusinessStatus.ACTIVE).count(),
+        'total_users': User.query.count(),
+        'total_sales': Sale.query.count(),
+        'total_revenue': db.session.query(db.func.sum(Payment.amount)).filter_by(payment_type='license').scalar() or 0,
+        'database_size': 'N/A'  # Would need specific DB queries to calculate
+    }
+    
+    return render_template('admin/system_settings.html', stats=stats)
+
+@app.route('/admin/settings/maintenance', methods=['POST'])
+@login_required
+@require_role(UserRole.SUPER_ADMIN)
+def system_maintenance():
+    action = request.form.get('action')
+    
+    if action == 'cleanup_logs':
+        # Clean up old activity logs (older than 90 days)
+        cutoff_date = datetime.utcnow() - timedelta(days=90)
+        deleted_count = ActivityLog.query.filter(ActivityLog.created_at < cutoff_date).delete()
+        db.session.commit()
+        flash(f'Cleaned up {deleted_count} old activity logs', 'success')
+    
+    elif action == 'expire_licenses':
+        # Mark expired licenses as expired
+        expired_businesses = Business.query.filter(
+            Business.license_expires_at < datetime.utcnow(),
+            Business.status == BusinessStatus.ACTIVE
+        ).all()
+        
+        for business in expired_businesses:
+            business.status = BusinessStatus.EXPIRED
+        
+        db.session.commit()
+        flash(f'Marked {len(expired_businesses)} businesses as expired', 'success')
+    
+    return redirect(url_for('system_settings'))
+
+# Super Admin - View Reports
+@app.route('/admin/reports')
+@login_required
+@require_role(UserRole.SUPER_ADMIN)
+def view_reports():
+    # Get date range from query parameters
+    start_date = request.args.get('start_date', '')
+    end_date = request.args.get('end_date', '')
+    
+    # Default to last 30 days if no dates provided
+    if not start_date:
+        start_date = (datetime.utcnow() - timedelta(days=30)).strftime('%Y-%m-%d')
+    if not end_date:
+        end_date = datetime.utcnow().strftime('%Y-%m-%d')
+    
+    # Convert strings to datetime objects
+    start_dt = datetime.strptime(start_date, '%Y-%m-%d')
+    end_dt = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
+    
+    # Revenue report
+    revenue_data = db.session.query(
+        db.func.date(Payment.created_at).label('date'),
+        db.func.sum(Payment.amount).label('total')
+    ).filter(
+        Payment.payment_type == 'license',
+        Payment.status == PaymentStatus.COMPLETED,
+        Payment.created_at >= start_dt,
+        Payment.created_at < end_dt
+    ).group_by(db.func.date(Payment.created_at)).all()
+    
+    # Business growth report
+    business_growth = db.session.query(
+        db.func.date(Business.created_at).label('date'),
+        db.func.count(Business.id).label('count')
+    ).filter(
+        Business.created_at >= start_dt,
+        Business.created_at < end_dt
+    ).group_by(db.func.date(Business.created_at)).all()
+    
+    # Top performing businesses
+    top_businesses = db.session.query(
+        Business.name,
+        db.func.count(Sale.id).label('sales_count'),
+        db.func.sum(Sale.total_amount).label('total_revenue')
+    ).join(Sale).filter(
+        Sale.created_at >= start_dt,
+        Sale.created_at < end_dt,
+        Sale.payment_status == PaymentStatus.COMPLETED
+    ).group_by(Business.id, Business.name).order_by(
+        db.func.sum(Sale.total_amount).desc()
+    ).limit(10).all()
+    
+    return render_template('admin/reports.html',
+                         start_date=start_date,
+                         end_date=end_date,
+                         revenue_data=revenue_data,
+                         business_growth=business_growth,
+                         top_businesses=top_businesses)
 
 @app.route('/dashboard/business')
 @login_required

@@ -140,7 +140,7 @@
                         <td>
                             {% if customer.sales %}
                                 {% set last_sale = customer.sales | sort(attribute='created_at', reverse=true) | first %}
-                                {{ moment(last_sale.created_at).fromNow() }}
+                                {{ last_sale.created_at.strftime('%b %d, %Y') }}
                             {% else %}
                                 <span class="text-muted">Never</span>
                             {% endif %}

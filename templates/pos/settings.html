@@ -225,7 +225,7 @@
                         License Active
                     </div>
                     <p class="mb-1"><strong>Plan:</strong> {{ current_user.business.subscription_plan.title() }}</p>
-                    <p class="mb-1"><strong>Expires:</strong> {{ moment(current_user.business.license_expires_at).format('MMM DD, YYYY') }}</p>
+                    <p class="mb-1"><strong>Expires:</strong> {{ current_user.business.license_expires_at.strftime('%b %d, %Y') }}</p>
                     <p class="mb-3"><strong>Days Remaining:</strong> {{ current_user.business.days_until_expiry() }}</p>
                     
                     {% if current_user.business.days_until_expiry() <= 5 %}

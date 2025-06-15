@@ -71,7 +71,7 @@
                                 <div class="alert alert-success">
                                     <h6><i class="fas fa-calendar-check me-2"></i>License Details</h6>
                                     <p class="mb-1"><strong>Plan:</strong> {{ business.subscription_plan.title() }}</p>
-                                    <p class="mb-1"><strong>Expires:</strong> {{ moment(business.license_expires_at).format('MMMM Do, YYYY') }}</p>
+                                    <p class="mb-1"><strong>Expires:</strong> {{ business.license_expires_at.strftime('%B %d, %Y') }}</p>
                                     <p class="mb-0"><strong>Days Remaining:</strong> {{ business.days_until_expiry() }}</p>
                                 </div>
                                 {% endif %}
